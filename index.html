@@ -2165,11 +2165,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => document.getElementById('preloader').classList.add('hidden'), 1000);
       
-      // Focus on tag input when page loads
-      setTimeout(() => {
-        const tagInput = document.getElementById('tagNumber');
-        if (tagInput) tagInput.focus();
-      }, 1500);
+      
       
       // Allow Enter key to submit
       document.getElementById('tagNumber').addEventListener('keypress', (e) => {
