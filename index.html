@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <!-- Google tag (gtag.js) -->
@@ -8,44 +9,203 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'G-GGHV06ZDYR');
+gtag(‘config’, ‘G-GGHV06ZDYR’);
 </script>
+
+  <!-- ===== ENHANCED SCHEMA MARKUP ===== -->
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "Organization",
-        "name": "Meadows Baptist Church",
-        "alternateName": "Free Lunch Tag",
+        "@type": "WebSite",
+        "@id": "https://freelunchtag.com/#website",
         "url": "https://freelunchtag.com",
-        "logo": "https://freelunchtag.com/logo.png",
-        "description": "A community project offering free lunch to strangers to build real friendships in Plano, TX. No strings attached.",
+        "name": "Free Lunch Tag",
+        "description": "A friendship project by Meadows Baptist Church offering free lunch to strangers in Plano, TX. No strings attached - just good food and new friends.",
+        "publisher": {
+          "@id": "https://freelunchtag.com/#organization"
+        }
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://freelunchtag.com/#webpage",
+        "url": "https://freelunchtag.com",
+        "name": "Free Lunch Tag | Free Meal & New Friends in Plano TX",
+        "description": "Got a tag? Enter your number to claim your free lunch! Meadows Baptist Church wants to buy you a meal and make a new friend. No catch, no sermon.",
+        "isPartOf": {
+          "@id": "https://freelunchtag.com/#website"
+        },
+        "about": {
+          "@id": "https://freelunchtag.com/#organization"
+        },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "url": "https://freelunchtag.com/LOGO.png"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://freelunchtag.com/#organization",
+        "name": "Meadows Baptist Church",
+        "legalName": "Meadows Baptist Church",
+        "url": "https://freelunchtag.com",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://freelunchtag.com/LOGO.png",
+          "width": 512,
+          "height": 512
+        },
+        "image": "https://freelunchtag.com/LOGO.png",
+        "description": "Meadows Baptist Church in Plano, Texas sponsors the Free Lunch Tag project - a community initiative to build genuine friendships by buying strangers lunch. No strings attached.",
         "address": {
           "@type": "PostalAddress",
           "addressLocality": "Plano",
           "addressRegion": "TX",
+          "postalCode": "75075",
           "addressCountry": "US"
+        },
+        "areaServed": {
+          "@type": "City",
+          "name": "Plano",
+          "containedInPlace": {
+            "@type": "State",
+            "name": "Texas"
+          }
+        },
+        "sameAs": []
+      },
+      {
+        "@type": "Project",
+        "name": "Free Lunch Tag",
+        "alternateName": ["FreeLunchTag", "Lunch Tag Project"],
+        "description": "A friendship initiative where Meadows Baptist Church members hand out numbered tags to strangers, offering to buy them lunch and start a genuine friendship. Recipients enter their tag number online to connect with their new friend.",
+        "url": "https://freelunchtag.com",
+        "sponsor": {
+          "@id": "https://freelunchtag.com/#organization"
+        },
+        "funding": {
+          "@type": "MonetaryGrant",
+          "funder": {
+            "@id": "https://freelunchtag.com/#organization"
+          },
+          "description": "Meadows Baptist Church funds all free meals for tag recipients"
         }
       },
       {
         "@type": "FAQPage",
-        "mainEntity": [{
-          "@type": "Question",
-          "name": "Is the lunch really free?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes! Meadows Baptist Church pays for the meal. There is no catch and no sermon—just good food and conversation."
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Is the lunch really free?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes! Meadows Baptist Church pays for the meal. There is no catch and no sermon—just good food and genuine conversation with a new friend."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does Free Lunch Tag work?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "1. Someone from Meadows Baptist Church hands you a numbered tag. 2. Visit freelunchtag.com and enter your tag number. 3. You'll see the contact info of the person who tagged you. 4. Text them to set up a time to grab lunch—they pay!"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What's the catch? Why are you doing this?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "There's no catch! We believe God is relational—He wants to be friends with us, not just preach at us. So we're following His example by loving our neighbors with a good meal and genuine conversation. No hidden agenda, just friendship."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Who is behind Free Lunch Tag?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Free Lunch Tag is a community project sponsored by Meadows Baptist Church in Plano, Texas. Our members volunteer to hand out tags and buy meals for new friends in our community."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What happens after I have lunch?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "That's up to you! We hope you made a new friend. If you'd like, you can bring your tag to Meadows Baptist Church on Wednesday at 6pm or Sunday at 9:30am for a bonus surprise. But there's no obligation—the free lunch is the whole thing."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Where can I use the free lunch tag?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "You and your new friend can go to any restaurant you'd like in the Plano, TX area. Tacos, burgers, coffee, pizza—whatever sounds good to both of you!"
+            }
+          }
+        ]
+      },
+      {
+        "@type": "Event",
+        "name": "Free Lunch Tag Bonus Prize Redemption - Wednesday",
+        "description": "Bring your Free Lunch Tag to Meadows Baptist Church after meeting your new friend for a special surprise!",
+        "eventSchedule": {
+          "@type": "Schedule",
+          "repeatFrequency": "P1W",
+          "byDay": "https://schema.org/Wednesday",
+          "startTime": "18:00:00"
+        },
+        "location": {
+          "@type": "Place",
+          "name": "Meadows Baptist Church",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Plano",
+            "addressRegion": "TX",
+            "addressCountry": "US"
           }
         },
-        {
-          "@type": "Question",
-          "name": "How does Tag My Friends work?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "1. Receive a numbered tag. 2. Enter the tag number on the website. 3. Get the phone number of the person who tagged you and text them to meet up."
+        "organizer": {
+          "@id": "https://freelunchtag.com/#organization"
+        },
+        "isAccessibleForFree": true
+      },
+      {
+        "@type": "Event",
+        "name": "Free Lunch Tag Bonus Prize Redemption - Sunday",
+        "description": "Bring your Free Lunch Tag to Meadows Baptist Church after meeting your new friend for a special surprise!",
+        "eventSchedule": {
+          "@type": "Schedule",
+          "repeatFrequency": "P1W",
+          "byDay": "https://schema.org/Sunday",
+          "startTime": "09:30:00"
+        },
+        "location": {
+          "@type": "Place",
+          "name": "Meadows Baptist Church",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Plano",
+            "addressRegion": "TX",
+            "addressCountry": "US"
           }
-        }]
+        },
+        "organizer": {
+          "@id": "https://freelunchtag.com/#organization"
+        },
+        "isAccessibleForFree": true
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://freelunchtag.com"
+          }
+        ]
       }
     ]
   }
@@ -53,27 +213,66 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Free Lunch Tag ⚡ New Friends </title>
-  <meta name="description" content="Get a free lunch on Meadows Baptist Church in Plano, TX! We want to buy you a meal and make a new friend. No strings attached.">
-  <meta name="keywords" content="free lunch, plano tx, meadows baptist church, free food, make friends, community">
-  
+
+  <!-- ===== PRIMARY SEO TAGS ===== -->
+
+  <title>Free Lunch Tag | Get a Free Meal in Plano TX | Meadows Baptist Church</title>
+  <meta name="description" content="Got a tag? Enter your number to claim your FREE lunch! Meadows Baptist Church in Plano, TX wants to buy you a meal and make a new friend. No strings attached, no catch - just good food and genuine friendship.">
+  <meta name="keywords" content="free lunch, free lunch tag, Plano TX, Meadows Baptist Church, free food Plano, make friends Plano, community outreach, friendship evangelism, free meal, Plano Texas church, buy you lunch">
+
+  <!-- ===== CANONICAL & LANGUAGE ===== -->
+
+  <link rel="canonical" href="https://freelunchtag.com/">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="language" content="English">
+  <meta name="geo.region" content="US-TX">
+  <meta name="geo.placename" content="Plano, Texas">
+
+  <!-- ===== OPEN GRAPH / FACEBOOK ===== -->
+
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://freelunchtag.com/">
-  <meta property="og:title" content="FREE LUNCH? Yes, seriously! 🍔">
-  <meta property="og:description" content="Someone wants to buy you lunch! Enter your tag number to meet your new friend. Sponsored by Meadows Baptist Church.">
+  <meta property="og:site_name" content="Free Lunch Tag">
+  <meta property="og:title" content="FREE LUNCH? Yes, Seriously! 🍔 | Meadows Baptist Church">
+  <meta property="og:description" content="Someone wants to buy you lunch in Plano, TX! Enter your tag number to meet your new friend. Sponsored by Meadows Baptist Church - no strings attached.">
   <meta property="og:image" content="https://freelunchtag.com/LOGO.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Free Lunch Tag - Get a free meal and make a new friend in Plano TX">
+  <meta property="og:locale" content="en_US">
+
+  <!-- ===== TWITTER CARD ===== -->
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Free Lunch on Meadows! ⚡">
-  <meta name="twitter:description" content="No strings attached. Just good food and good friends in Plano, TX.">
-  <meta name="twitter:image" content="https://freelunchtag.com/logo.png">
+  <meta name="twitter:title" content="Free Lunch Tag | Meadows Baptist Church Plano TX">
+  <meta name="twitter:description" content="Got a tag? Claim your free lunch! No strings attached - just good food and new friends in Plano, Texas.">
+  <meta name="twitter:image" content="https://freelunchtag.com/LOGO.png">
+  <meta name="twitter:image:alt" content="Free Lunch Tag Logo - Meadows Baptist Church community project">
+
+  <!-- ===== ADDITIONAL SEO META ===== -->
+
+  <meta name="author" content="Meadows Baptist Church">
+  <meta name="publisher" content="Meadows Baptist Church">
+  <meta name="copyright" content="Meadows Baptist Church">
+  <meta name="theme-color" content="#22C55E">
+  <meta name="msapplication-TileColor" content="#22C55E">
+  <meta name="application-name" content="Free Lunch Tag">
+  <meta name="apple-mobile-web-app-title" content="Free Lunch Tag">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=yes">
+
+  <!-- ===== FAVICON & ICONS ===== -->
+
   <link rel="icon" type="image/png" href="LOGO.PNG">
+  <link rel="apple-touch-icon" href="LOGO.PNG">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- ===== FONTS ===== -->
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="apple-touch-icon" href="LOGO.PNG">
-  <link rel="manifest" href="manifest.json">
-    
 
   <style>
     /* -----------------------------------------------------------
@@ -1711,17 +1910,20 @@
       .activator-phone { font-size: 1.4rem; }
     }
   </style>
+
 </head>
 <body data-theme="light">
 
   <!-- Preloader -->
+
   <div class="preloader" id="preloader">
-    <img src="LOGO.PNG" alt="Loading..." class="preloader-logo">
+    <img src="LOGO.PNG" alt="Free Lunch Tag Logo - Loading" class="preloader-logo">
     <h2 style="font-family: var(--font-display); margin-top: 20px; font-size: 2rem; color: white;">FREE LUNCH LOADING...</h2>
   </div>
 
   <!-- Floating Decorations -->
-  <div class="decorations">
+
+  <div class="decorations" aria-hidden="true">
     <span class="deco deco-bolt">⚡</span>
     <span class="deco deco-burger">🍔</span>
     <span class="deco deco-bolt-yellow">⚡</span>
@@ -1733,7 +1935,8 @@
   </div>
 
   <!-- Theme Toggle -->
-  <div class="theme-toggle" onclick="toggleTheme()" role="button" aria-label="Toggle Dark Mode" tabindex="0">
+
+  <div class="theme-toggle" onclick="toggleTheme()" role="button" aria-label="Toggle between light and dark mode" tabindex="0">
     <div class="toggle-sticker">
       <div class="toggle-track">
         <span class="toggle-label light">LIGHT</span>
@@ -1746,276 +1949,280 @@
   </div>
 
   <div id="app">
+
+```
+<!-- HERO SECTION -->
+<header class="hero" id="hero">
+  <div class="hero-bg" aria-hidden="true">
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+  </div>
+  
+  <div class="marquee-strip marquee-top" aria-hidden="true">
+    <div class="marquee-content">
+      <span>FREE LUNCH 🍔 ON US ✦ MAKE A NEW FRIEND ✦ NO STRINGS ATTACHED ✦ </span>
+      <span>FREE LUNCH 🍔 ON US ✦ MAKE A NEW FRIEND ✦ NO STRINGS ATTACHED ✦ </span>
+    </div>
+  </div>
+  
+  <div class="hero-content">
+    <img src="LOGO.PNG" alt="Free Lunch Tag Logo - Meadows Baptist Church Community Project" class="hero-logo-img">
     
-    <!-- HERO SECTION -->
-    <section class="hero" id="hero">
-      <div class="hero-bg">
-        <div class="gradient-orb orb-1"></div>
-        <div class="gradient-orb orb-2"></div>
+    <div class="hero-eyebrow">
+      <span class="pill">🎉 FREE</span>
+      <span class="eyebrow-text">Lunch is on Meadows Baptist Church!</span>
+    </div>
+    
+    <h1 class="hero-title">
+      <span class="title-line">WE WANT TO</span>
+      <span class="title-line">BUY YOU</span>
+      <span class="title-line gradient-text mega">LUNCH!</span>
+    </h1>
+    
+    <p class="hero-desc">
+      Someone handed you a tag because they want to <span class="highlight-green">buy you lunch</span> and get to know you! 
+      Enter your tag number below to see who wants to meet you. <span class="highlight-word">It's that easy.</span>
+    </p>
+    
+    <div class="hero-actions">
+      <button class="btn-green" onclick="scrollToSection('claim')">
+        <span class="btn-green-inner">CLAIM MY FREE LUNCH →</span>
+      </button>
+      <button class="btn-secondary" onclick="scrollToSection('how')">HOW IT WORKS</button>
+    </div>
+    
+    <div class="social-proof">
+      <div class="avatars" aria-hidden="true">
+        <div class="avatar">🍕</div><div class="avatar">🌮</div><div class="avatar">🍔</div><div class="avatar">☕</div>
       </div>
-      
-      <div class="marquee-strip marquee-top">
-        <div class="marquee-content">
-          <span>FREE LUNCH 🍔 ON US ✦ MAKE A NEW FRIEND ✦ NO STRINGS ATTACHED ✦ </span>
-          <span>FREE LUNCH 🍔 ON US ✦ MAKE A NEW FRIEND ✦ NO STRINGS ATTACHED ✦ </span>
+      <span class="proof-text">Free meals shared this month: <strong>47</strong></span>
+    </div>
+  </div>
+  
+  <div class="marquee-strip marquee-bottom" aria-hidden="true">
+    <div class="marquee-content reverse">
+      <span>MEADOWS BAPTIST CHURCH ★ PLANO, TX ★ REAL FRIENDS ★ FREE FOOD ★ </span>
+      <span>MEADOWS BAPTIST CHURCH ★ PLANO, TX ★ REAL FRIENDS ★ FREE FOOD ★ </span>
+    </div>
+  </div>
+</header>
+
+<!-- FREE LUNCH BANNER -->
+<section class="lunch-banner" id="lunch" aria-labelledby="lunch-title">
+  <div class="lunch-banner-content">
+    <div class="lunch-icon-row" aria-hidden="true">
+      <span>🍔</span>
+      <span>🌮</span>
+      <span>🍕</span>
+      <span>☕</span>
+      <span>🥗</span>
+    </div>
+    <h2 class="lunch-title" id="lunch-title">WAIT... FREE LUNCH?</h2>
+    <p class="lunch-subtitle">
+      Yep! Meadows Baptist Church is paying for you to have lunch (or coffee, or tacos) 
+      with the person who gave you this tag. No catch. No sermon. Just good food and good conversation.
+    </p>
+    <div class="church-badge">
+      <span aria-hidden="true">💚</span>
+      <span>Sponsored by Meadows Baptist Church • Plano, TX</span>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEO SECTION -->
+<section class="video-section" id="video" aria-labelledby="video-section-title">
+  <div class="section-header">
+    <h2 class="section-title" id="video-section-title">WHAT IS <span class="outline-text" data-text="THIS?">THIS?</span></h2>
+  </div>
+  <div class="video-container">
+    <div class="video-wrapper">
+      <div class="video-frame" id="videoFrame">
+        <!-- Replace VIDEO_ID_HERE with your actual YouTube video ID -->
+        <div class="video-placeholder" onclick="loadVideo()" role="button" aria-label="Play Free Lunch Tag explainer video" tabindex="0">
+          <div class="play-button"></div>
+          <div class="video-title">WATCH THE EXPLAINER</div>
+          <div class="video-subtitle">1 minute • See what this is all about</div>
         </div>
       </div>
-      
-      <div class="hero-content">
-        <img src="LOGO.PNG" alt="Tag My Friends Logo" class="hero-logo-img">
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how" aria-labelledby="how-section-title">
+  <div class="section-header">
+    <h2 class="section-title" id="how-section-title">HOW IT <span class="outline-text" data-text="WORKS">WORKS</span></h2>
+  </div>
+  <div class="steps-container">
+    <article class="step-card">
+      <span class="step-icon" aria-hidden="true">🏷️</span>
+      <h3 class="step-title">1. ENTER YOUR TAG</h3>
+      <p class="step-desc">Type in the number on the tag you received. That's it!</p>
+    </article>
+    <article class="step-card">
+      <span class="step-icon" aria-hidden="true">📱</span>
+      <h3 class="step-title">2. TEXT THEM</h3>
+      <p class="step-desc">You'll see their name & phone. Send them a text to set up lunch!</p>
+    </article>
+    <article class="step-card">
+      <span class="step-icon" aria-hidden="true">🍔</span>
+      <h3 class="step-title">3. EAT FREE!</h3>
+      <p class="step-desc"><strong>They pay for your meal.</strong> Just show up and enjoy!</p>
+    </article>
+  </div>
+</section>
+
+<!-- WHY SECTION -->
+<section class="why-section" id="why" aria-labelledby="why-section-title">
+  <div class="why-content">
+    <h2 class="why-title" id="why-section-title">BUT... WHY?</h2>
+    <p class="why-text">
+      We believe God is <strong>relational</strong>. He didn't just want to preach at us—He wanted to 
+      <strong>be friends with us</strong>. So we're following His example. This isn't a sales pitch. 
+      It's us trying to love our neighbors the way Jesus would: with a good meal and genuine conversation.
+    </p>
+    <p class="why-text">
+      That's it. <strong>No hidden agenda.</strong> Just people who want to make friends and buy you lunch.
+    </p>
+    
+    <div class="why-cards">
+      <article class="why-card">
+        <div class="why-card-icon" aria-hidden="true">🤝</div>
+        <h3 class="why-card-title">REAL CONNECTION</h3>
+        <p class="why-card-desc">Not followers. Not likes. Actual human friends.</p>
+      </article>
+      <article class="why-card">
+        <div class="why-card-icon" aria-hidden="true">💚</div>
+        <h3 class="why-card-title">NO STRINGS</h3>
+        <p class="why-card-desc">Seriously. Just lunch. That's the whole thing.</p>
+      </article>
+      <article class="why-card">
+        <div class="why-card-icon" aria-hidden="true">🙏</div>
+        <h3 class="why-card-title">LOVE IN ACTION</h3>
+        <p class="why-card-desc">This is what following Jesus looks like to us.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- CLAIM SECTION -->
+<section class="claim-section" id="claim" aria-labelledby="claim-section-title">
+  <div class="claim-container">
+    <div class="claim-wrapper">
+      <div class="claim-card meadows-card" id="claimCard">
         
-        <div class="hero-eyebrow">
-          <span class="pill">🎉 FREE</span>
-          <span class="eyebrow-text">Lunch is on Meadows Baptist Church!</span>
-        </div>
-        
-        <h1 class="hero-title">
-          <span class="title-line">WE WANT TO</span>
-          <span class="title-line">BUY YOU</span>
-          <span class="title-line gradient-text mega">LUNCH!</span>
-        </h1>
-        
-        <p class="hero-desc">
-          Someone handed you a tag because they want to <span class="highlight-green">buy you lunch</span> and get to know you! 
-          Enter your tag number below to see who wants to meet you. <span class="highlight-word">It's that easy.</span>
-        </p>
-        
-        <div class="hero-actions">
-          <button class="btn-green" onclick="scrollToSection('claim')">
-            <span class="btn-green-inner">CLAIM MY FREE LUNCH →</span>
-          </button>
-          <button class="btn-secondary" onclick="scrollToSection('how')">HOW IT WORKS</button>
-        </div>
-        
-        <div class="social-proof">
-          <div class="avatars">
-            <div class="avatar">🍕</div><div class="avatar">🌮</div><div class="avatar">🍔</div><div class="avatar">☕</div>
+        <!-- Step 0: Enter Tag Number -->
+        <div class="claim-step active" id="step-0">
+          <div class="step-header">
+            <div class="step-emoji" aria-hidden="true">🏷️</div>
+            <h2 id="claim-section-title">ENTER YOUR TAG</h2>
+            <p>Check the number on your physical tag</p>
           </div>
-          <span class="proof-text">Free meals shared this month: <strong>47</strong></span>
+          <div class="tag-input-group">
+            <span class="tag-hash" aria-hidden="true">#</span>
+            <input type="tel" id="tagNumber" placeholder="00" maxlength="3" inputmode="numeric" aria-label="Enter your tag number">
+          </div>
+          <div class="error-message hidden" id="tagError" role="alert"></div>
+          <button class="btn-submit" onclick="checkTag()">GET MY FREE LUNCH →</button>
         </div>
-      </div>
-      
-      <div class="marquee-strip marquee-bottom">
-        <div class="marquee-content reverse">
-          <span>MEADOWS BAPTIST CHURCH ★ PLANO, TX ★ REAL FRIENDS ★ FREE FOOD ★ </span>
-          <span>MEADOWS BAPTIST CHURCH ★ PLANO, TX ★ REAL FRIENDS ★ FREE FOOD ★ </span>
-        </div>
-      </div>
-    </section>
-
-    <!-- FREE LUNCH BANNER -->
-    <section class="lunch-banner" id="lunch">
-      <div class="lunch-banner-content">
-        <div class="lunch-icon-row">
-          <span>🍔</span>
-          <span>🌮</span>
-          <span>🍕</span>
-          <span>☕</span>
-          <span>🥗</span>
-        </div>
-        <h2 class="lunch-title">WAIT... FREE LUNCH?</h2>
-        <p class="lunch-subtitle">
-          Yep! Meadows Baptist Church is paying for you to have lunch (or coffee, or tacos) 
-          with the person who gave you this tag. No catch. No sermon. Just good food and good conversation.
-        </p>
-        <div class="church-badge">
-          <span>💚</span>
-          <span>Sponsored by Meadows Baptist Church • Plano, TX</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- VIDEO SECTION -->
-    <section class="video-section" id="video">
-      <div class="section-header">
-        <h2 class="section-title">WHAT IS <span class="outline-text" data-text="THIS?">THIS?</span></h2>
-      </div>
-      <div class="video-container">
-        <div class="video-wrapper">
-          <div class="video-frame" id="videoFrame">
-            <!-- Replace VIDEO_ID_HERE with your actual YouTube video ID -->
-            <div class="video-placeholder" onclick="loadVideo()" role="button" aria-label="Play Explainer Video" tabindex="0">
-              <div class="play-button"></div>
-              <div class="video-title">WATCH THE EXPLAINER</div>
-              <div class="video-subtitle">1 minute • See what this is all about</div>
+        
+        <!-- Step 1: Show Activator Contact -->
+        <div class="claim-step" id="step-1">
+          <div class="step-header">
+            <div class="step-emoji" aria-hidden="true">🎉</div>
+            <h2>YOUR LUNCH DATE!</h2>
+            <p>Here's who wants to buy you lunch:</p>
+          </div>
+          
+          <div class="activator-card">
+            <div class="activator-avatar" id="activatorAvatar" aria-hidden="true">👋</div>
+            <div class="activator-name" id="activatorName">Loading...</div>
+            <div class="activator-role">Your New Friend</div>
+            <div class="activator-phone" id="activatorPhone">(555) 123-4567</div>
+            <div class="activator-note hidden" id="activatorNote"></div>
+          </div>
+          
+          <a href="#" id="textButton" class="btn-text-them">
+            <span aria-hidden="true">💬</span>
+            <span>TEXT THEM NOW</span>
+          </a>
+          
+          <div class="success-box">
+            <h3>✨ WHAT TO SAY</h3>
+            <p>"Hey! I got your tag. When do you want to grab lunch?"</p>
+          </div>
+          
+          <div class="bonus-reminder">
+            <div class="bonus-reminder-title">🎁 BONUS PRIZE!</div>
+            <div class="bonus-reminder-text">
+              After you meet, bring your tag to Meadows on <strong>Wednesday @ 6pm</strong> or <strong>Sunday @ 9:30am</strong> for a special surprise!
             </div>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- HOW IT WORKS -->
-    <section class="how-section" id="how">
-      <div class="section-header">
-        <h2 class="section-title">HOW IT <span class="outline-text" data-text="WORKS">WORKS</span></h2>
-      </div>
-      <div class="steps-container">
-        <div class="step-card">
-          <span class="step-icon">🏷️</span>
-          <h3 class="step-title">1. ENTER YOUR TAG</h3>
-          <p class="step-desc">Type in the number on the tag you received. That's it!</p>
-        </div>
-        <div class="step-card">
-          <span class="step-icon">📱</span>
-          <h3 class="step-title">2. TEXT THEM</h3>
-          <p class="step-desc">You'll see their name & phone. Send them a text to set up lunch!</p>
-        </div>
-        <div class="step-card">
-          <span class="step-icon">🍔</span>
-          <h3 class="step-title">3. EAT FREE!</h3>
-          <p class="step-desc"><strong>They pay for your meal.</strong> Just show up and enjoy!</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- WHY SECTION -->
-    <section class="why-section" id="why">
-      <div class="why-content">
-        <h2 class="why-title">BUT... WHY?</h2>
-        <p class="why-text">
-          We believe God is <strong>relational</strong>. He didn't just want to preach at us—He wanted to 
-          <strong>be friends with us</strong>. So we're following His example. This isn't a sales pitch. 
-          It's us trying to love our neighbors the way Jesus would: with a good meal and genuine conversation.
-        </p>
-        <p class="why-text">
-          That's it. <strong>No hidden agenda.</strong> Just people who want to make friends and buy you lunch.
-        </p>
         
-        <div class="why-cards">
-          <div class="why-card">
-            <div class="why-card-icon">🤝</div>
-            <div class="why-card-title">REAL CONNECTION</div>
-            <div class="why-card-desc">Not followers. Not likes. Actual human friends.</div>
+        <!-- Step: Tag Not Found -->
+        <div class="claim-step" id="step-not-found">
+          <div class="step-header">
+            <div class="step-emoji" aria-hidden="true">🤔</div>
+            <h2>HMMMM...</h2>
+            <p>We couldn't find that tag number</p>
           </div>
-          <div class="why-card">
-            <div class="why-card-icon">💚</div>
-            <div class="why-card-title">NO STRINGS</div>
-            <div class="why-card-desc">Seriously. Just lunch. That's the whole thing.</div>
+          
+          <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 16px; margin-bottom: 25px; text-align: center;">
+            <p style="color: rgba(255,255,255,0.85); font-weight: 600; margin-bottom: 15px;">
+              Double-check the number on your tag and try again. If it still doesn't work, the tag might not be activated yet!
+            </p>
           </div>
-          <div class="why-card">
-            <div class="why-card-icon">🙏</div>
-            <div class="why-card-title">LOVE IN ACTION</div>
-            <div class="why-card-desc">This is what following Jesus looks like to us.</div>
-          </div>
+          
+          <button class="btn-submit" onclick="goToStep(0)">← TRY AGAIN</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BONUS SECTION -->
+<section class="bonus-section" id="bonus" aria-labelledby="bonus-section-title">
+  <div class="bonus-card">
+    <div class="bonus-inner">
+      <div class="bonus-badge">🎁 BONUS PRIZE</div>
+      <h2 class="bonus-title" id="bonus-section-title">BRING YOUR TAG TO MEADOWS!</h2>
+      <p class="bonus-desc">
+        After you've had lunch with your new friend, bring your tag to Meadows Baptist Church 
+        for a special surprise. We want to meet you too!
+      </p>
+      <div class="bonus-times">
+        <div class="bonus-time">
+          <div class="bonus-time-day">WEDNESDAY</div>
+          <div class="bonus-time-hour">6:00 PM</div>
+        </div>
+        <div class="bonus-time">
+          <div class="bonus-time-day">SUNDAY</div>
+          <div class="bonus-time-hour">9:30 AM</div>
         </div>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <!-- CLAIM SECTION -->
-    <section class="claim-section" id="claim">
-      <div class="claim-container">
-        <div class="claim-wrapper">
-          <div class="claim-card meadows-card" id="claimCard">
-            
-            <!-- Step 0: Enter Tag Number -->
-            <div class="claim-step active" id="step-0">
-              <div class="step-header">
-                <div class="step-emoji">🏷️</div>
-                <h2>ENTER YOUR TAG</h2>
-                <p>Check the number on your physical tag</p>
-              </div>
-              <div class="tag-input-group">
-                <span class="tag-hash">#</span>
-                <input type="tel" id="tagNumber" placeholder="00" maxlength="3" inputmode="numeric">
-              </div>
-              <div class="error-message hidden" id="tagError"></div>
-              <button class="btn-submit" onclick="checkTag()">GET MY FREE LUNCH →</button>
-            </div>
-            
-            <!-- Step 1: Show Activator Contact -->
-            <div class="claim-step" id="step-1">
-              <div class="step-header">
-                <div class="step-emoji">🎉</div>
-                <h2>YOUR LUNCH DATE!</h2>
-                <p>Here's who wants to buy you lunch:</p>
-              </div>
-              
-              <div class="activator-card">
-                <div class="activator-avatar" id="activatorAvatar">👋</div>
-                <div class="activator-name" id="activatorName">Loading...</div>
-                <div class="activator-role">Your New Friend</div>
-                <div class="activator-phone" id="activatorPhone">(555) 123-4567</div>
-                <div class="activator-note hidden" id="activatorNote"></div>
-              </div>
-              
-              <a href="#" id="textButton" class="btn-text-them">
-                <span>💬</span>
-                <span>TEXT THEM NOW</span>
-              </a>
-              
-              <div class="success-box">
-                <h3>✨ WHAT TO SAY</h3>
-                <p>"Hey! I got your tag. When do you want to grab lunch?"</p>
-              </div>
-              
-              <div class="bonus-reminder">
-                <div class="bonus-reminder-title">🎁 BONUS PRIZE!</div>
-                <div class="bonus-reminder-text">
-                  After you meet, bring your tag to Meadows on <strong>Wednesday @ 6pm</strong> or <strong>Sunday @ 9:30am</strong> for a special surprise!
-                </div>
-              </div>
-            </div>
-            
-            <!-- Step: Tag Not Found -->
-            <div class="claim-step" id="step-not-found">
-              <div class="step-header">
-                <div class="step-emoji">🤔</div>
-                <h2>HMMMM...</h2>
-                <p>We couldn't find that tag number</p>
-              </div>
-              
-              <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 16px; margin-bottom: 25px; text-align: center;">
-                <p style="color: rgba(255,255,255,0.85); font-weight: 600; margin-bottom: 15px;">
-                  Double-check the number on your tag and try again. If it still doesn't work, the tag might not be activated yet!
-                </p>
-              </div>
-              
-              <button class="btn-submit" onclick="goToStep(0)">← TRY AGAIN</button>
-            </div>
+<footer class="footer">
+  <div class="footer-logo">
+    <img src="LOGO.PNG" alt="Free Lunch Tag Logo - A Meadows Baptist Church Community Project">
+  </div>
+  <p class="footer-text">Made with ❤️ by people who just want to be your friend.</p>
+  <div class="footer-church">
+    <span aria-hidden="true">⛪</span>
+    <span>Meadows Baptist Church • Plano, TX</span>
+  </div>
+</footer>
+```
 
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- BONUS SECTION -->
-    <section class="bonus-section" id="bonus">
-      <div class="bonus-card">
-        <div class="bonus-inner">
-          <div class="bonus-badge">🎁 BONUS PRIZE</div>
-          <h2 class="bonus-title">BRING YOUR TAG TO MEADOWS!</h2>
-          <p class="bonus-desc">
-            After you've had lunch with your new friend, bring your tag to Meadows Baptist Church 
-            for a special surprise. We want to meet you too!
-          </p>
-          <div class="bonus-times">
-            <div class="bonus-time">
-              <div class="bonus-time-day">WEDNESDAY</div>
-              <div class="bonus-time-hour">6:00 PM</div>
-            </div>
-            <div class="bonus-time">
-              <div class="bonus-time-day">SUNDAY</div>
-              <div class="bonus-time-hour">9:30 AM</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <div class="footer-logo">
-        <img src="LOGO.PNG" alt="Tag My Friends Logo">
-      </div>
-      <p class="footer-text">Made with ❤️ by people who just want to be your friend.</p>
-      <div class="footer-church">
-        <span>⛪</span>
-        <span>Meadows Baptist Church • Plano, TX</span>
-      </div>
-    </footer>
   </div>
 
   <!-- Bottom Navigation -->
-  <div class="bottom-nav">
+
+  <nav class="bottom-nav" aria-label="Quick navigation">
     <div class="nav-sticker">
       <div class="nav-track">
         <button class="nav-item" onclick="scrollToSection('claim')">🏷️ MY TAG</button>
@@ -2023,10 +2230,11 @@
         <button class="nav-item" onclick="scrollToSection('why')">💚 WHY?</button>
       </div>
     </div>
-  </div>
+  </nav>
 
   <!-- Confetti Container -->
-  <div id="confetti-container"></div>
+
+  <div id="confetti-container" aria-hidden="true"></div>
 
   <script>
     // =============================================================
@@ -2340,7 +2548,8 @@
           src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" 
           frameborder="0" 
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-          allowfullscreen>
+          allowfullscreen
+          title="Free Lunch Tag Explainer Video - Meadows Baptist Church">
         </iframe>
       `;
     };
@@ -2399,7 +2608,7 @@
     
     // Get stats
     window.getStats = () => {
-      console.log('📊 TAG MY FRIENDS STATS');
+      console.log('📊 FREE LUNCH TAG STATS');
       console.log('─'.repeat(30));
       console.log(`Total Active Tags: ${STATS.totalActiveTags}`);
       console.log(`Tier 1 Activators: ${STATS.tier1Count}`);
