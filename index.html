@@ -871,21 +871,27 @@
       text-shadow: 3px 3px 0px #0F172A, 6px 6px 0px rgba(0,0,0,0.3);
     }
     
+        /* 1. Base Style (Light Mode - Green) */
     .gradient-text {
       background: var(--grad-meadows);
-      -webkit-background-clip: text; 
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      color: transparent; 
+      text-shadow: none !important; /* REMOVES THE BLACK LAYER */
       filter: drop-shadow(4px 4px 0px #000000);
     }
-    
-    .gradient-text-purple {
-      background: var(--grad-primary);
-      -webkit-background-clip: text; 
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+
+    /* 2. Dark Mode Override (Yellow/Gold) */
+    [data-theme="dark"] .gradient-text {
+      background-image: linear-gradient(135deg, #FDE047 0%, #EAB308 100%) !important;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      text-shadow: none !important; /* REMOVES THE BLACK LAYER */
       filter: drop-shadow(4px 4px 0px #000000);
     }
+
     
     [data-theme="dark"] .gradient-text {
       filter: drop-shadow(4px 4px 0px #000000);
