@@ -1,0 +1,6 @@
+private/
+*.private.json
+*.pdf
+*.zip
+node_modules/
+_site/

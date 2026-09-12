@@ -1,0 +1,59 @@
+name: Manage lunch cards
+on:
+  workflow_dispatch:
+    inputs:
+      host_id:
+        description: Host
+        required: true
+        type: choice
+        options: [lauren, andrew, seth, kelly, scott, charles, jonathan, nathan]
+      card_refs:
+        description: 'Private pack references, e.g. LA01,LA02 (or all for activation/handout)'
+        required: true
+        default: all
+        type: string
+      action:
+        description: Update
+        required: true
+        type: choice
+        options: [activate, handed_out, requested, scheduled, completed, deactivate]
+      lunch_date:
+        description: 'Scheduled date YYYY-MM-DD (required for scheduled)'
+        required: false
+        type: string
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: free-lunch-publish
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate and update card statuses
+        env:
+          HOST_ID: ${{ inputs.host_id }}
+          CARD_REFS: ${{ inputs.card_refs }}
+          ACTION: ${{ inputs.action }}
+          LUNCH_DATE: ${{ inputs.lunch_date }}
+        run: node scripts/manage-pilot.mjs
+      - name: Save update
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/cards.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update lunch invitation progress'
+            git push origin HEAD:main
+          fi
+      - name: Request the existing GitHub Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds"

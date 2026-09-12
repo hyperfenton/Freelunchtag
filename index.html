@@ -2,6 +2,9 @@
 
 <html lang="en">
 <head>
+ <meta name="referrer" content="no-referrer">
+ <script>if(location.hash.startsWith('#tag=')){window.__lunchTag=location.hash.slice(5);history.replaceState(null,'',location.pathname+location.search+'#claim');}</script>
+ <link rel="stylesheet" href="pilot.css">
  <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-GGHV06ZDYR"></script>
 <script>
@@ -32,7 +35,7 @@
         "@id": "https://freelunchtag.com/#webpage",
         "url": "https://freelunchtag.com",
         "name": "Free Lunch Tag | Free Meal & New Friends in Plano TX",
-        "description": "Got a tag? Enter your number to claim your free lunch! Meadows Baptist Church wants to buy you a meal and make a new friend. No catch, no sermon.",
+        "description": "Got a tag? Enter your number to claim your free lunch! Meadows Baptist Church wants to buy you a meal and make a new friend. Church attendance is never required.",
         "isPartOf": {
           "@id": "https://freelunchtag.com/#website"
         },
@@ -41,7 +44,7 @@
         },
         "primaryImageOfPage": {
           "@type": "ImageObject",
-          "url": "https://freelunchtag.com/LOGO.png"
+          "url": "https://freelunchtag.com/LOGO.PNG"
         }
       },
       {
@@ -52,11 +55,11 @@
         "url": "https://freelunchtag.com",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://freelunchtag.com/LOGO.png",
+          "url": "https://freelunchtag.com/LOGO.PNG",
           "width": 512,
           "height": 512
         },
-        "image": "https://freelunchtag.com/LOGO.png",
+        "image": "https://freelunchtag.com/LOGO.PNG",
         "description": "Meadows Baptist Church in Plano, Texas sponsors the Free Lunch Tag project - a community initiative to build genuine friendships by buying strangers lunch. No strings attached.",
         "address": {
           "@type": "PostalAddress",
@@ -109,7 +112,7 @@
             "name": "How does Free Lunch Tag work?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "1. Someone from Meadows Baptist Church hands you a numbered tag. 2. Visit freelunchtag.com and enter your tag number. 3. You'll see the contact info of the person who tagged you. 4. Text them to set up a time to grab lunch—they pay!"
+              "text": "1. Someone from Meadows Baptist Church hands you a numbered tag. 2. Visit freelunchtag.com and enter your card code. 3. You'll see the contact info of the person who tagged you. 4. Text them to set up a time to grab lunch—they pay!"
             }
           },
           {
@@ -133,7 +136,7 @@
             "name": "What happens after I have lunch?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "That's up to you! We hope you made a new friend. If you'd like, you can bring your tag to Meadows Baptist Church on Wednesday at 6pm or Sunday at 9:30am for a bonus surprise. But there's no obligation—the free lunch is the whole thing."
+              "text": "That's up to you! We hope you made a new friend. If you'd like, you can bring your tag to Meadows Baptist Church on Wednesday at 6pm or Sunday at 9:30am if you would like to visit. But there's no obligation—the free lunch is the whole thing."
             }
           },
           {
@@ -149,7 +152,7 @@
       {
         "@type": "Event",
         "name": "Free Lunch Tag Bonus Prize Redemption - Wednesday",
-        "description": "Bring your Free Lunch Tag to Meadows Baptist Church after meeting your new friend for a special surprise!",
+        "description": "Bring your Free Lunch Tag to Meadows Baptist Church after meeting your new friend if you would like to visit. Your meal is free whether or not you come!",
         "eventSchedule": {
           "@type": "Schedule",
           "repeatFrequency": "P1W",
@@ -174,7 +177,7 @@
       {
         "@type": "Event",
         "name": "Free Lunch Tag Bonus Prize Redemption - Sunday",
-        "description": "Bring your Free Lunch Tag to Meadows Baptist Church after meeting your new friend for a special surprise!",
+        "description": "Bring your Free Lunch Tag to Meadows Baptist Church after meeting your new friend if you would like to visit. Your meal is free whether or not you come!",
         "eventSchedule": {
           "@type": "Schedule",
           "repeatFrequency": "P1W",
@@ -234,7 +237,7 @@
   <meta property="og:url" content="https://freelunchtag.com/">
   <meta property="og:site_name" content="Free Lunch Tag">
   <meta property="og:title" content="FREE LUNCH? Yes, Seriously! 🍔 | Meadows Baptist Church">
-  <meta property="og:description" content="Someone wants to buy you lunch in Plano, TX! Enter your tag number to meet your new friend. Sponsored by Meadows Baptist Church - no strings attached.">
+  <meta property="og:description" content="Someone wants to buy you lunch in Plano, TX! Enter your card code to meet your new friend. Sponsored by Meadows Baptist Church - no strings attached.">
   <meta property="og:image" content="https://freelunchtag.com/IMG_7264.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -1981,12 +1984,12 @@
     
     <p class="hero-desc">
       Someone handed you a tag because they want to <span class="highlight-green">buy you lunch</span> and get to know you! 
-      Enter your tag number below to see who wants to meet you. <span class="highlight-word">It's that easy.</span>
+      Enter your card code below to see who wants to meet you. <span class="highlight-word">It's that easy.</span>
     </p>
     
     <div class="hero-actions">
       <button class="btn-green" onclick="scrollToSection('claim')">
-        <span class="btn-green-inner">CLAIM MY FREE LUNCH →</span>
+        <span class="btn-green-inner">I HAVE A TAG →</span>
       </button>
       <button class="btn-secondary" onclick="scrollToSection('how')">HOW IT WORKS</button>
     </div>
@@ -1995,7 +1998,7 @@
       <div class="avatars" aria-hidden="true">
         <div class="avatar">🍕</div><div class="avatar">🌮</div><div class="avatar">🍔</div><div class="avatar">☕</div>
       </div>
-      <span class="proof-text">Free meals shared this month: <strong>47</strong></span>
+      <span class="proof-text">Our first lunches are coming soon!</span>
     </div>
   </div>
   
@@ -2020,7 +2023,7 @@
     <h2 class="lunch-title" id="lunch-title">WAIT... FREE LUNCH?</h2>
     <p class="lunch-subtitle">
       Yep! Meadows Baptist Church is paying for you to have lunch (or coffee, or tacos) 
-      with the person who gave you this tag. No catch. No sermon. Just good food and good conversation.
+      with the person who gave you this tag. A free meal and good conversation. Church attendance is never required.
     </p>
     <div class="church-badge">
       <span aria-hidden="true">💚</span>
@@ -2029,23 +2032,12 @@
   </div>
 </section>
 
-<!-- VIDEO SECTION -->
-<section class="video-section" id="video" aria-labelledby="video-section-title">
-  <div class="section-header">
-    <h2 class="section-title" id="video-section-title">WHAT IS <span class="outline-text" data-text="THIS?">THIS?</span></h2>
-  </div>
-  <div class="video-container">
-    <div class="video-wrapper">
-      <div class="video-frame" id="videoFrame">
-        <!-- Replace VIDEO_ID_HERE with your actual YouTube video ID -->
-        <div class="video-placeholder" onclick="loadVideo()" role="button" aria-label="Play Free Lunch Tag explainer video" tabindex="0">
-          <div class="play-button"></div>
-          <div class="video-title">WATCH THE EXPLAINER</div>
-          <div class="video-subtitle">1 minute • See what this is all about</div>
-        </div>
-      </div>
-    </div>
-  </div>
+<section class="hosts-section" id="hosts" aria-labelledby="hosts-title">
+ <h2 class="section-title" id="hosts-title">MEET YOUR <span class="gradient-text">LUNCH HOSTS</span></h2>
+ <p class="hosts-intro">Here are some of our Meadows leaders out and about sharing free lunch invitations. Recognize a friendly face? Tap to say hello.</p>
+ <div class="hosts-grid" id="hostsGrid"></div>
+ <p id="hostsNotice" class="pilot-notice" role="status">Meals shared and invitations claimed are confirmed by our hosts.</p>
+ <section id="hostProfile" class="host-profile" aria-label="Lunch host profile" hidden></section>
 </section>
 
 <!-- HOW IT WORKS -->
@@ -2057,7 +2049,7 @@
     <article class="step-card">
       <span class="step-icon" aria-hidden="true">🏷️</span>
       <h3 class="step-title">1. ENTER YOUR TAG</h3>
-      <p class="step-desc">Type in the number on the tag you received. That's it!</p>
+      <p class="step-desc">Scan the QR on your tag, or enter its unique card code.</p>
     </article>
     <article class="step-card">
       <span class="step-icon" aria-hidden="true">📱</span>
@@ -2070,6 +2062,20 @@
       <p class="step-desc"><strong>They pay for your meal.</strong> Just show up and enjoy!</p>
     </article>
   </div>
+</section>
+
+
+
+<section class="story-section" id="story" aria-labelledby="story-title">
+ <div class="story-inner">
+  <div class="story-brands"><a href="https://www.meadowsbaptist.org" aria-label="Visit Meadows Baptist Church"><img src="assets/meadows-logo.png" alt="Meadows Baptist Church logo" loading="lazy"></a><span aria-hidden="true">×</span><a href="https://www.hyperfenton.com" aria-label="Visit Hyper Fenton"><img src="assets/hyper-fenton-logo.jpeg" alt="Hyper Fenton HF logo" loading="lazy"></a></div>
+  <p class="story-credit">MEADOWS BAPTIST CHURCH × HYPER FENTON</p>
+  <h2 id="story-title">IT STARTED WITH<br><span>“LET’S GRAB LUNCH.”</span></h2>
+  <p><a href="https://www.hyperfenton.com">Hyper Fenton (Seth Fenton)</a> is a music artist and pastor at <a href="https://www.meadowsbaptist.org">Meadows Baptist Church</a>, right across the street from Plano East Senior High School. He’s always inviting people around town to grab lunch, hear their story, and get to know them.</p>
+  <p>Free Lunch Tag grew out of that simple habit. Now a team of Meadows hosts is extending the invitation: a free meal, a real conversation, and a new friend.</p>
+  <p>We follow Jesus, and we want to love our neighbors. You don’t have to attend church to accept the invitation.</p>
+  <div class="story-links"><a href="https://www.meadowsbaptist.org">MeadowsBaptist.org ↗</a><a href="https://www.hyperfenton.com">HyperFenton.com ↗</a></div>
+ </div>
 </section>
 
 <!-- WHY SECTION -->
@@ -2116,14 +2122,14 @@
           <div class="step-header">
             <div class="step-emoji" aria-hidden="true">🏷️</div>
             <h2 id="claim-section-title">ENTER YOUR TAG</h2>
-            <p>Check the number on your physical tag</p>
+            <p>Enter the 12-character code printed on your tag</p>
           </div>
           <div class="tag-input-group">
             <span class="tag-hash" aria-hidden="true">#</span>
-            <input type="tel" id="tagNumber" placeholder="00" maxlength="3" inputmode="numeric" aria-label="Enter your tag number">
+            <input type="text" id="tagNumber" placeholder="XXXX-XXXX-XXXX" maxlength="16" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-label="Enter your card code" aria-describedby="tagError">
           </div>
           <div class="error-message hidden" id="tagError" role="alert"></div>
-          <button class="btn-submit" onclick="checkTag()">GET MY FREE LUNCH →</button>
+          <button class="btn-submit" onclick="checkTag()">FIND MY LUNCH HOST →</button>
         </div>
         
         <!-- Step 1: Show Activator Contact -->
@@ -2138,24 +2144,24 @@
             <div class="activator-avatar" id="activatorAvatar" aria-hidden="true">👋</div>
             <div class="activator-name" id="activatorName">Loading...</div>
             <div class="activator-role">Your New Friend</div>
-            <div class="activator-phone" id="activatorPhone">(555) 123-4567</div>
+            <div class="activator-phone" id="activatorPhone"></div>
             <div class="activator-note hidden" id="activatorNote"></div>
           </div>
           
-          <a href="#" id="textButton" class="btn-text-them">
+          <a href="#" id="textButton" class="btn-text-them" aria-disabled="true">
             <span aria-hidden="true">💬</span>
             <span>TEXT THEM NOW</span>
           </a>
           
-          <div class="success-box">
+          <p class="lookup-status" id="lookupStatus" role="status"></p><p class="pilot-notice">Under 18? Arrange lunch together with your parent or guardian.</p><div class="success-box">
             <h3>✨ WHAT TO SAY</h3>
             <p>"Hey! I got your tag. When do you want to grab lunch?"</p>
           </div>
           
           <div class="bonus-reminder">
-            <div class="bonus-reminder-title">🎁 BONUS PRIZE!</div>
+            <div class="bonus-reminder-title">YOU’RE WELCOME AT MEADOWS</div>
             <div class="bonus-reminder-text">
-              After you meet, bring your tag to Meadows on <strong>Wednesday @ 6pm</strong> or <strong>Sunday @ 9:30am</strong> for a special surprise!
+              After you meet, bring your tag to Meadows on <strong>Wednesday @ 6pm</strong> or <strong>Sunday @ 9:30am</strong> if you would like to visit. Your meal is free whether or not you come!
             </div>
           </div>
         </div>
@@ -2165,12 +2171,12 @@
           <div class="step-header">
             <div class="step-emoji" aria-hidden="true">🤔</div>
             <h2>HMMMM...</h2>
-            <p>We couldn't find that tag number</p>
+            <p>This invitation is not available yet</p>
           </div>
           
           <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 16px; margin-bottom: 25px; text-align: center;">
             <p style="color: rgba(255,255,255,0.85); font-weight: 600; margin-bottom: 15px;">
-              Double-check the number on your tag and try again. If it still doesn't work, the tag might not be activated yet!
+              Double-check the code on your tag and try again. If it still doesn't work, the tag might not be activated yet!
             </p>
           </div>
           
@@ -2186,11 +2192,11 @@
 <section class="bonus-section" id="bonus" aria-labelledby="bonus-section-title">
   <div class="bonus-card">
     <div class="bonus-inner">
-      <div class="bonus-badge">🎁 BONUS PRIZE</div>
+      <div class="bonus-badge">COME SAY HELLO</div>
       <h2 class="bonus-title" id="bonus-section-title">BRING YOUR TAG TO MEADOWS!</h2>
       <p class="bonus-desc">
         After you've had lunch with your new friend, bring your tag to Meadows Baptist Church 
-        for a special surprise. We want to meet you too!
+        if you would like to visit. We would love to meet you, and there is no obligation to attend.
       </p>
       <div class="bonus-times">
         <div class="bonus-time">
@@ -2213,8 +2219,9 @@
   <p class="footer-text">Made with ❤️ by people who just want to be your friend.</p>
   <div class="footer-church">
     <span aria-hidden="true">⛪</span>
-    <span>Meadows Baptist Church • Plano, TX</span>
+    <a href="https://www.meadowsbaptist.org" style="color:inherit">Meadows Baptist Church • Plano, TX</a>
   </div>
+<p class="footer-partners"><a href="https://www.meadowsbaptist.org">MeadowsBaptist.org</a> × <a href="https://www.hyperfenton.com">HyperFenton.com</a></p><a class="host-admin-link" href="admin.html">Host tools</a>
 </footer>
 
 
@@ -2236,393 +2243,6 @@
 
   <div id="confetti-container" aria-hidden="true"></div>
 
-  <script>
-    // =============================================================
-    // ACTIVATOR DATABASE
-    // =============================================================
-    // 
-    // This is the master list of all tag activators.
-    // 
-    // TIER SYSTEM (Internal Only - Users never see this):
-    // - Tier 1: Hand-selected Meadows members with budget access
-    // - Tier 2: Recipients who became activators after meeting Tier 1
-    // 
-    // HOW TO ADD A NEW ACTIVATOR:
-    // 1. Add a new entry with the tag number as the key
-    // 2. Fill in all the fields
-    // 3. Save and deploy
-    //
-    // =============================================================
-    
-    const ACTIVATORS = {
-      // ─────────────────────────────────────────────────────────────
-      // TIER 1 ACTIVATORS (Original Meadows Members)
-      // ─────────────────────────────────────────────────────────────
-      
-      1: {
-        name: "Pastor Mike",
-        phone: "(469) 555-0101",
-        tier: 1,
-        active: true,
-        note: "Can't wait to meet you! I love tacos 🌮",
-        timesActivated: 5,
-        meetingsCompleted: 4,
-        emoji: "⛪"
-      },
-      
-      2: {
-        name: "Sarah Johnson",
-        phone: "(469) 555-0102",
-        tier: 1,
-        active: true,
-        note: "Coffee lover here! Let's chat ☕",
-        timesActivated: 3,
-        meetingsCompleted: 3,
-        emoji: "☕"
-      },
-      
-      3: {
-        name: "David Chen",
-        phone: "(469) 555-0103",
-        tier: 1,
-        active: true,
-        note: "I know the best burger spots in Plano!",
-        timesActivated: 4,
-        meetingsCompleted: 4,
-        emoji: "🍔"
-      },
-      
-      4: {
-        name: "Maria Garcia",
-        phone: "(469) 555-0104",
-        tier: 1,
-        active: true,
-        note: "Lunch is on me! Text anytime 😊",
-        timesActivated: 2,
-        meetingsCompleted: 2,
-        emoji: "🌮"
-      },
-      
-      5: {
-        name: "James Wilson",
-        phone: "(469) 555-0105",
-        tier: 1,
-        active: true,
-        note: null,
-        timesActivated: 1,
-        meetingsCompleted: 1,
-        emoji: "🍕"
-      },
-      
-      6: {
-        name: "Emily Brown",
-        phone: "(469) 555-0106",
-        tier: 1,
-        active: true,
-        note: "Let's grab some pizza and chat!",
-        timesActivated: 3,
-        meetingsCompleted: 2,
-        emoji: "🍕"
-      },
-      
-      7: {
-        name: "Michael Taylor",
-        phone: "(469) 555-0107",
-        tier: 1,
-        active: true,
-        note: "BBQ fan here - hope you are too!",
-        timesActivated: 2,
-        meetingsCompleted: 2,
-        emoji: "🥩"
-      },
-      
-      8: {
-        name: "Ashley Martinez",
-        phone: "(469) 555-0108",
-        tier: 1,
-        active: true,
-        note: null,
-        timesActivated: 1,
-        meetingsCompleted: 0,
-        emoji: "🥗"
-      },
-      
-      9: {
-        name: "Chris Anderson",
-        phone: "(469) 555-0109",
-        tier: 1,
-        active: true,
-        note: "I'm free most weekday lunches!",
-        timesActivated: 4,
-        meetingsCompleted: 3,
-        emoji: "🍜"
-      },
-      
-      10: {
-        name: "Jessica Lee",
-        phone: "(469) 555-0110",
-        tier: 1,
-        active: true,
-        note: "Sushi lover - just saying! 🍣",
-        timesActivated: 2,
-        meetingsCompleted: 2,
-        emoji: "🍣"
-      },
-      
-      // ─────────────────────────────────────────────────────────────
-      // TIER 2 ACTIVATORS (Former Recipients)
-      // These are people who received a tag, met with their Tier 1,
-      // and decided to become activators themselves.
-      // ─────────────────────────────────────────────────────────────
-      
-      11: {
-        name: "Kevin Roberts",
-        phone: "(469) 555-0111",
-        tier: 2,
-        active: true,
-        note: "I was skeptical too - but this is legit!",
-        timesActivated: 1,
-        meetingsCompleted: 1,
-        originalActivator: 3, // Was tagged by David Chen
-        emoji: "🌯"
-      },
-      
-      12: {
-        name: "Amanda White",
-        phone: "(469) 555-0112",
-        tier: 2,
-        active: true,
-        note: "Paying it forward! Let's do lunch 🍴",
-        timesActivated: 1,
-        meetingsCompleted: 0,
-        originalActivator: 2, // Was tagged by Sarah Johnson
-        emoji: "🍴"
-      },
-      
-      // ─────────────────────────────────────────────────────────────
-      // ADD MORE ACTIVATORS BELOW
-      // Copy this template:
-      //
-      // 13: {
-      //   name: "Full Name",
-      //   phone: "(469) 555-XXXX",
-      //   tier: 1,  // or 2
-      //   active: true,
-      //   note: "Optional message for the recipient",
-      //   timesActivated: 0,
-      //   meetingsCompleted: 0,
-      //   emoji: "🍔"
-      // },
-      // ─────────────────────────────────────────────────────────────
-      
-    };
-
-    // =============================================================
-    // ADMIN TRACKING DATA
-    // This helps you track stats across all activators
-    // =============================================================
-    
-    const STATS = {
-      totalMealsSponsored: 47,
-      totalActiveTags: Object.keys(ACTIVATORS).filter(k => ACTIVATORS[k].active).length,
-      tier1Count: Object.keys(ACTIVATORS).filter(k => ACTIVATORS[k].tier === 1).length,
-      tier2Count: Object.keys(ACTIVATORS).filter(k => ACTIVATORS[k].tier === 2).length,
-    };
-
-    // Update the social proof counter
-    document.addEventListener('DOMContentLoaded', () => {
-      const proofText = document.querySelector('.social-proof .proof-text');
-      if (proofText) {
-        proofText.innerHTML = `Free meals shared this month: <strong>${STATS.totalMealsSponsored}</strong>`;
-      }
-    });
-
-    // =============================================================
-    // CORE FUNCTIONALITY
-    // =============================================================
-
-    let currentTag = null;
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => document.getElementById('preloader').classList.add('hidden'), 1000);
-      
-      
-      
-      // Allow Enter key to submit
-      document.getElementById('tagNumber').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') checkTag();
-      });
-    });
-
-    // Theme Toggle
-    window.toggleTheme = () => {
-      const body = document.body;
-      const current = body.getAttribute('data-theme');
-      body.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
-    };
-
-    // Navigation
-    window.scrollToSection = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-
-    window.goToStep = (step) => {
-      document.querySelectorAll('.claim-step').forEach(s => s.classList.remove('active'));
-      const target = typeof step === 'string' ? `step-${step}` : `step-${step}`;
-      document.getElementById(target).classList.add('active');
-    };
-
-    // Check Tag & Show Activator
-    window.checkTag = () => {
-      const tagInput = document.getElementById('tagNumber');
-      const val = parseInt(tagInput.value);
-      
-      // Validate input
-      if (!val || val < 1 || val > 100) {
-        document.getElementById('tagError').textContent = 'Enter a valid tag number (1-100)';
-        document.getElementById('tagError').classList.remove('hidden');
-        tagInput.focus();
-        return;
-      }
-      
-      document.getElementById('tagError').classList.add('hidden');
-      const btn = document.querySelector('#step-0 .btn-submit');
-      btn.textContent = 'FINDING YOUR FRIEND...';
-      
-      currentTag = val;
-      
-      // Simulate brief loading
-      setTimeout(() => {
-        btn.textContent = 'GET MY FREE LUNCH →';
-        
-        // Check if tag exists and is active
-        const activator = ACTIVATORS[val];
-        
-        if (activator && activator.active) {
-          // Show activator info
-          showActivator(activator, val);
-          startConfetti();
-          goToStep(1);
-        } else {
-          // Tag not found
-          goToStep('not-found');
-        }
-      }, 800);
-    };
-
-    // Display Activator Info
-    function showActivator(activator, tagNum) {
-      document.getElementById('activatorName').textContent = activator.name;
-      document.getElementById('activatorPhone').textContent = activator.phone;
-      document.getElementById('activatorAvatar').textContent = activator.emoji || '👋';
-      
-      // Show note if exists
-      const noteEl = document.getElementById('activatorNote');
-      if (activator.note) {
-        noteEl.textContent = activator.note;
-        noteEl.classList.remove('hidden');
-      } else {
-        noteEl.classList.add('hidden');
-      }
-      
-      // Set up text button
-      const phoneDigits = activator.phone.replace(/\D/g, '');
-      const textBtn = document.getElementById('textButton');
-      const message = encodeURIComponent(`Hey ${activator.name.split(' ')[0]}! I got your tag (#${tagNum}). When do you want to grab lunch?`);
-      textBtn.href = `sms:${phoneDigits}?body=${message}`;
-    }
-
-    // Load YouTube Video
-    window.loadVideo = () => {
-      const videoFrame = document.getElementById('videoFrame');
-      // Replace VIDEO_ID_HERE with your actual YouTube video ID
-      const videoId = 'VIDEO_ID_HERE';
-      
-      if (videoId === 'VIDEO_ID_HERE') {
-        // Show placeholder message if no video ID set
-        alert('Video coming soon! Check back later.');
-        return;
-      }
-      
-      videoFrame.innerHTML = `
-        <iframe 
-          src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" 
-          frameborder="0" 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-          allowfullscreen
-          title="Free Lunch Tag Explainer Video - Meadows Baptist Church">
-        </iframe>
-      `;
-    };
-
-    // Confetti Effect
-    function startConfetti() {
-      const container = document.getElementById('confetti-container');
-      if (!container) return;
-      container.innerHTML = '';
-      
-      const colors = ['#22C55E', '#FFD600', '#FF2E4D', '#7C3AED', '#22D3EE', '#F97316'];
-      const emojis = ['🍔', '🌮', '🍕', '☕', '🎉', '⭐', '💚'];
-      
-      for (let i = 0; i < 60; i++) {
-        const p = document.createElement('div');
-        p.classList.add('confetti-piece');
-        p.style.left = Math.random() * 100 + '%';
-        p.style.animation = `confettiDrop ${1.5 + Math.random()}s linear forwards`;
-        p.style.animationDelay = Math.random() * 0.8 + 's';
-        
-        if (Math.random() > 0.7) {
-          // Some confetti are emojis
-          p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-          p.style.fontSize = '1.5rem';
-          p.style.background = 'transparent';
-          p.style.border = 'none';
-        } else {
-          p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-          p.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
-        }
-        
-        container.appendChild(p);
-      }
-      
-      // Clear confetti after animation
-      setTimeout(() => {
-        container.innerHTML = '';
-      }, 3000);
-    }
-
-    // =============================================================
-    // ADMIN CONSOLE HELPERS
-    // Run these in browser console for quick admin tasks
-    // =============================================================
-    
-    // View all activators
-    window.viewActivators = () => {
-      console.table(Object.entries(ACTIVATORS).map(([tag, a]) => ({
-        tag,
-        name: a.name,
-        tier: a.tier,
-        active: a.active,
-        meetings: a.meetingsCompleted
-      })));
-    };
-    
-    // Get stats
-    window.getStats = () => {
-      console.log('📊 FREE LUNCH TAG STATS');
-      console.log('─'.repeat(30));
-      console.log(`Total Active Tags: ${STATS.totalActiveTags}`);
-      console.log(`Tier 1 Activators: ${STATS.tier1Count}`);
-      console.log(`Tier 2 Activators: ${STATS.tier2Count}`);
-      console.log(`Total Meals Sponsored: ${STATS.totalMealsSponsored}`);
-      
-      const totalMeetings = Object.values(ACTIVATORS).reduce((sum, a) => sum + a.meetingsCompleted, 0);
-      console.log(`Total Meetings Completed: ${totalMeetings}`);
-    };
-    
-    console.log('💡 Admin Commands:');
-    console.log('   viewActivators() - See all activators');
-    console.log('   getStats() - View statistics');
-  </script>
-
+  <script type="module" src="pilot.js"></script>
 </body>
 </html>
