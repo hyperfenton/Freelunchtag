@@ -1,5 +1,7 @@
 # Free Lunch Tag — Meadows pilot
 
+**Current rollout:** Public host and card collections are intentionally empty while owner approval for publishing the prepared host profiles and public tag lookup dataset is pending. The setup steps below become usable after those collections are populated. No private manifest is included in this repository.
+
 Existing public website: https://freelunchtag.com . Hosted on GitHub Pages; no ChatGPT Site or external database is required by this version.
 
 ## Eight hosts, 80 physical tags
