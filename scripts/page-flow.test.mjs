@@ -82,3 +82,13 @@ test('visible object bounds fit both the video and the screen after cropping or 
     }
   }
 });
+
+test('the guest guide and manual entry are reachable before exploring film objects',()=>{
+  assert.match(page,/<header class="film-tools">[\s\S]*?id="invitationGuide"[^>]*aria-controls="sceneDialog"/);
+  const guide=page.slice(page.indexOf('<div id="invitationCopy">'),page.indexOf('<div class="demonstration"'));
+  assert.match(guide,/href="#claim"/);
+  assert.match(guide,/12-character code/);
+  assert.match(guide,/original host/);
+  assert.equal((guide.match(/<li>/g)||[]).length,3);
+  assert.equal((page.match(/id="codeForm"/g)||[]).length,1);
+});

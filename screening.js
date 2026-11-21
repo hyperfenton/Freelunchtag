@@ -9,7 +9,7 @@ const nextButton=byId('continueFilm'), options=byId('filmOptions');
 const details=byId('sceneDialog'), content=byId('sceneContent'), title=byId('sceneTitle');
 const quick=byId('quickTag'), watch=byId('watchFilm'), cue=byId('scrollCue');
 const wide=matchMedia('(min-aspect-ratio:1/1)'), reduce=matchMedia('(prefers-reduced-motion:reduce)');
-const album='assets/film/', revision='?v=journey-1';
+const album='assets/film/', revision='?v=invitation-1';
 const dialogsOpen=()=>Boolean(document.querySelector('dialog[open]'));
 const motionOff=()=>reduce.matches||root.dataset.motion==='off'||navigator.connection?.saveData===true;
 const frameTime=t=>Math.max(0,Math.min(lastFrame,Math.round(t*fps)/fps));
@@ -195,23 +195,22 @@ function moveHere(node){
 function copyElements(selector){
   document.querySelectorAll(selector).forEach(n=>content.append(n.cloneNode(true)));
 }
-function sceneDetails(id=chapters[selected].id){
+let sceneReturn;
+function sceneDetails(id=chapters[selected].id, trigger=options.querySelector('summary')){
   closeMenu();
   if(dialogsOpen())return;
   const section=byId(id);
   if(id==='claim'){quick.click();return;}
+  sceneReturn=trigger;
+  details.toggleAttribute('data-guide',id==='how');
   content.replaceChildren();
   const heading=section.querySelector('h1,h2')?.innerText||'Made with love by Meadows.';
-  title.textContent=heading.replace(/\s+/g,' ').trim();
+  title.textContent=id==='how'?'Can I buy you lunch?':heading.replace(/\s+/g,' ').trim();
   switch(id){
     case 'hero':copyElements('#hero .lede');break;
     case 'lunch':copyElements('#lunch p');break;
     case 'hosts':moveHere(section.querySelector('.people'));break;
-    case 'how':{
-      const list=document.createElement('ol');
-      section.querySelectorAll('article').forEach(a=>{const li=document.createElement('li');li.textContent=a.querySelector('h3').textContent+' '+a.querySelector('p').textContent;list.append(li);});
-      content.append(list);break;
-    }
+    case 'how':moveHere(byId('invitationCopy'));break;
     case 'video':moveHere(section.querySelector('video'));break;
     case 'story':copyElements('#story .prose>p,#story .partners');break;
     case 'why':copyElements('#why p');break;
@@ -220,6 +219,9 @@ function sceneDetails(id=chapters[selected].id){
   }
   details.showModal();byId('closeScene').focus();
 }
+byId('invitationGuide').addEventListener('click',event=>{
+  stopWatching();sceneDetails('how',event.currentTarget);
+});
 byId('readScene').addEventListener('click',()=>sceneDetails());
 byId('closeScene').addEventListener('click',()=>details.close());
 details.addEventListener('close',()=>{
@@ -228,7 +230,7 @@ details.addEventListener('close',()=>{
     relocated.slot.replaceWith(relocated.node);relocated=null;
   }
   content.replaceChildren();
-  options.querySelector('summary').focus({preventScroll:true});
+  if(!dialogsOpen())sceneReturn?.focus({preventScroll:true});
 });
 
 function watchDialogs(){
@@ -247,7 +249,7 @@ document.addEventListener('visibilitychange',()=>{
   else if(watching&&!dialogsOpen())film.play().then(schedule).catch(stopWatching);
   else schedule();
 });
-document.querySelectorAll('a[href="#claim"]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();quick.click();}));
+document.querySelectorAll('a[href="#claim"]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();if(details.open)details.close();quick.click();}));
 function followHash(){
   if(location.hash==='#claim'){quick.click();return;}
   const i=chapters.findIndex(ch=>ch.id===location.hash.slice(1));

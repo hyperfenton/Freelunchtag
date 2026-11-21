@@ -19,7 +19,7 @@ html.projecting{background:#0e0a17;color:#fffbf7}
 
 .projecting main>section>.frame,.projecting .closing p,.projecting .credits{position:absolute!important;clip-path:inset(50%);overflow:hidden;width:1px;height:1px;margin:-1px;padding:0;white-space:normal}
 .projecting footer{padding:0}.projecting .closing{width:100%;height:var(--travel,230svh)}
-.projecting .film-tools{display:block;position:fixed;right:max(13px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));z-index:5;color:#fff}
+.projecting .film-tools{display:flex;align-items:center;gap:7px;position:fixed;right:max(13px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));z-index:5;color:#fff}
 .film-tools details{position:relative}.film-tools summary{list-style:none;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#100e229e;color:#fff9ff;font:700 1.4rem/1 system-ui;border:1px solid #fff6;user-select:none}
 .film-tools summary::-webkit-details-marker{display:none}.tool-list{position:absolute;top:48px;right:0;display:grid;min-width:190px;border-radius:12px;border:1px solid #e1d9f680;padding:6px;background:#201b32f5;box-shadow:0 12px 24px #0e082a55}
 .tool-list button{color:white;background:none;border:0;text-align:left;padding:10px 12px;border-radius:8px;font-size:.94rem}
@@ -78,3 +78,23 @@ dialog::backdrop{background:#100b1bbf;backdrop-filter:blur(4px)}body:has(dialog[
 @media(max-aspect-ratio:1/1) and (prefers-reduced-motion:no-preference){
   .projecting:not([data-motion="off"]) #quickTag{transition:top .65s ease-in-out}
 }
+
+#invitationGuide{-webkit-tap-highlight-color:transparent;min-height:44px;border-radius:24px;border:1px solid #fff5df94;padding:0 15px;background:#211923cc;color:#fff9ee;font:600 .83rem/1.2 system-ui}
+#invitationGuide:hover{background:#342737}
+#sceneDialog[data-guide]{color:#332b2c;background:#fbf5e8;border:1px solid #c9b99c;border-radius:9px}
+#sceneDialog[data-guide] .detail-frame{padding:clamp(18px,4.6vw,38px)}
+#sceneDialog[data-guide] .dismiss{margin-bottom:12px}
+#sceneDialog[data-guide] h2{font-family:Georgia,serif;font-weight:normal;font-style:italic;font-size:clamp(1.9rem,5.8vw,3rem);line-height:1.08}
+.guide-offer{max-width:42ch;line-height:1.5}
+.guide-claim{margin:14px 0 6px;min-height:44px;background:#4b2949;color:white}
+.guest-steps,#sceneContent .guest-steps{list-style:none;counter-reset:guest-step;padding:0;margin:12px 0 18px}
+.guest-steps li{counter-increment:guest-step;position:relative;padding:13px 0 0 31px;border-top:1px solid #bda97d70}
+.guest-steps li+li{margin-top:12px}
+.guest-steps li::before{content:counter(guest-step);position:absolute;left:0;top:15px;font:italic 1.15rem/1 Georgia,serif;color:#754e63}
+.guest-steps h3{font-size:1.45rem}
+.guest-steps h3+p,.guest-questions p{margin-top:5px;line-height:1.44}
+.guest-steps blockquote{margin:9px 0 0;border-left:2px solid #b18a5d;padding-left:10px;color:#5b394a;font:italic 1rem/1.45 Georgia,serif}
+.guest-questions details{border-top:1px solid #bda97d70}
+.guest-questions summary{padding:12px 0;min-height:44px;font-weight:650}
+.guest-questions details p{margin:0 0 14px}
+.collector-note{flex-basis:100%;max-width:44ch;margin:2px auto 0;text-align:center;font-size:.93rem;line-height:1.45}

@@ -12,6 +12,8 @@ import cv2
 import numpy as np
 from PIL import Image
 
+from inscriptions import FilmInscriptions
+
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'film-source'
 OUTPUT = ROOT / 'assets' / 'film'
@@ -68,6 +70,7 @@ def render(mode):
                'scale=out_color_matrix=bt709', '-pix_fmt', 'yuv420p', '-colorspace',
                'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709',
                '-movflags', '+faststart', str(staging)]
+    inscriptions = FilmInscriptions()
     frame_number = 0
     with subprocess.Popen(command, stdin=subprocess.PIPE) as encoder:
         for name, seconds in TAKES:
@@ -80,6 +83,7 @@ def render(mode):
                     ok, frame = reader.read()
                     if not ok:
                         raise ValueError(f'Cannot read {name}, frame {local}')
+                    inscriptions.apply(frame, name, local)
                     side = frame.shape[0]
                     assert frame.shape[1] == side
                     crop = round(side * 9 / 16)

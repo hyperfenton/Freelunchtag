@@ -14,8 +14,8 @@ if (location.hash.startsWith('#tag=')) {
 <meta name="description" content="Someone at Meadows Baptist Church wants to buy you lunch. Scan your Free Lunch Tag or enter its code to meet your host and pick a time together.">
 <meta name="theme-color" content="#120d25">
 <link rel="canonical" href="https://freelunchtag.com/"><link rel="icon" href="LOGO.PNG"><link rel="apple-touch-icon" href="LOGO.PNG"><link rel="manifest" href="manifest.json">
-<meta property="og:type" content="website"><meta property="og:url" content="https://freelunchtag.com/"><meta property="og:title" content="Free Lunch Tag · Lunch is on us."><meta property="og:description" content="A little tag. A real invitation to lunch with someone from Meadows in Plano."><meta property="og:image" content="https://freelunchtag.com/assets/film/film-lift-wide.webp?v=journey-1"><meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="screening.css?v=touch-1">
+<meta property="og:type" content="website"><meta property="og:url" content="https://freelunchtag.com/"><meta property="og:title" content="Free Lunch Tag · Lunch is on us."><meta property="og:description" content="A little tag. A real invitation to lunch with someone from Meadows in Plano."><meta property="og:image" content="https://freelunchtag.com/assets/film/film-lift-wide.webp?v=invitation-1"><meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="screening.css?v=invitation-1">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="assets/collection/barlow-condensed-extrabold.woff2">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Free Lunch Tag","url":"https://freelunchtag.com/","description":"Collectible invitations to a free meal with a Meadows host in Plano, Texas.","publisher":{"@type":"Organization","name":"Meadows Baptist Church","url":"https://www.meadowsbaptist.org"}}</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-GGHV06ZDYR"></script>
@@ -23,10 +23,11 @@ if (location.hash.startsWith('#tag=')) {
 </head>
 <body>
 <div id="cinema" aria-hidden="true">
-  <picture id="stillFrame"><source media="(min-aspect-ratio: 1/1)" srcset="assets/film/film-lift-wide.webp?v=journey-1"><img src="assets/film/film-lift.webp?v=journey-1" alt="" fetchpriority="high"></picture>
+  <picture id="stillFrame"><source media="(min-aspect-ratio: 1/1)" srcset="assets/film/film-lift-wide.webp?v=invitation-1"><img src="assets/film/film-lift.webp?v=invitation-1" alt="" fetchpriority="high"></picture>
   <video id="storyFilm" muted playsinline preload="none" disablepictureinpicture tabindex="-1"></video>
 </div>
 <header class="film-tools">
+  <button type="button" id="invitationGuide" aria-haspopup="dialog" aria-controls="sceneDialog">How lunch works</button>
   <details id="filmOptions"><summary aria-label="Film options" title="Film options"><span aria-hidden="true">···</span></summary>
     <div class="tool-list">
       <button type="button" id="watchFilm">Watch as a film</button>
@@ -49,7 +50,7 @@ if (location.hash.startsWith('#tag=')) {
     </div>
   </section>
   <section id="lunch" class="lunch section" aria-labelledby="lunch-title">
-    <div class="frame lunch-inner"><h2 id="lunch-title">Wait… <em>free lunch?</em></h2><div><p>Yep. Meadows Baptist Church is paying for you to have lunch, coffee, or tacos with the person who gave you this tag.</p><p>A free meal and good conversation. Church attendance is always optional.</p></div></div>
+    <div class="frame lunch-inner"><h2 id="lunch-title">Wait… <em>free lunch?</em></h2><div><p>Meadows Baptist Church covers lunch, coffee, or tacos for you and the host linked to your tag. Text your host to pick a spot together.</p><p>A free meal and good conversation. Church attendance is always optional.</p></div></div>
   </section>
   <section id="hosts" class="hosts section" aria-labelledby="hosts-title"><div class="frame host-layout">
     <div><h2 id="hosts-title">Meet your<br><em>lunch hosts.</em></h2><p class="hosts-intro">These are the people from Meadows inviting neighbors to lunch. Tap a name to say hello.</p><p class="proof-text"></p></div>
@@ -58,10 +59,18 @@ if (location.hash.startsWith('#tag=')) {
   <section id="how" class="how section" aria-labelledby="how-title"><div class="frame">
     <h2 id="how-title">How it <em>works.</em></h2>
     <div class="walkthrough">
-      <div class="sequence">
-        <article data-beat="scan"><div class="step-no">01</div><div><h3>Enter your tag.</h3><p>Scan the QR on the back, or type the printed code. You’ll see your host’s photo, a little about them, and their number.</p></div></article>
-        <article data-beat="text"><div class="step-no">02</div><div><h3>Text them.</h3><p>Say hello and pick a time and a place to meet. Your tag opens a text with a first line ready to send.</p></div></article>
-        <article data-beat="eat"><div class="step-no">03</div><div><h3>Eat free!</h3><p>Your host picks up the tab. After lunch the tag is yours to keep or trade. Its code stays connected to the original host.</p></div></article>
+      <div id="invitationCopy">
+        <p class="guide-offer">Someone from Meadows Baptist Church in Plano would love to share a meal with you. Your host picks up the tab.</p>
+        <a class="button guide-claim" href="#claim">Enter my tag</a>
+        <ol class="guest-steps">
+          <li><h3>Find your host.</h3><p>Scan the QR on the back of your tag or enter its 12-character code. You’ll see your host’s photo, a little about them, and their number.</p></li>
+          <li><h3>Make a lunch plan.</h3><p>Tap <strong>Text my host</strong> and suggest a time and place.</p><blockquote>“Hey, I got your lunch tag! Are you free for tacos this week?”</blockquote></li>
+          <li><h3>Enjoy lunch. Keep the tag.</h3><p>After lunch, keep your design or trade with a friend. The code still points to the original host.</p></li>
+        </ol>
+        <div class="guest-questions">
+          <details><summary>Do I need to attend church?</summary><p>Church attendance is optional. Seth, a pastor at Meadows, takes neighbors in Plano to lunch to hear their stories. Those meals inspired Free Lunch Tag.</p></details>
+          <details><summary>Could I host a lunch?</summary><p>Tell your host over lunch that you’d like to invite someone, too. Meadows sets up each new host with a profile and tags of their own.</p></details>
+        </div>
       </div>
       <div class="demonstration" aria-hidden="true" data-moment="scan">
         <div class="scan-still"><div class="sample-fob"><div class="mini-ring"></div><img src="assets/collection/back.webp" alt="" width="480" height="720"></div><span class="scanner"></span></div>
@@ -80,7 +89,7 @@ if (location.hash.startsWith('#tag=')) {
     </div></div></section>
   <section id="why" class="why section" aria-labelledby="why-title"><div class="frame why-inner"><h2 id="why-title">But… <em>why?</em></h2><div><p>We believe God is relational. Jesus made time to sit at the table with people, and we want to love our neighbors that way, too.</p><p>You’re welcome whether you come to church or simply want someone to share a meal with.</p></div></div></section>
   <section id="claim" class="claim section" aria-label="Your invitation"><div class="frame"><div class="ticket">
-    <div id="step-0" class="claim-step active"><h2>Enter <em>your tag.</em></h2><p>Use the 12-character code on the back of your tag.</p>
+    <div id="step-0" class="claim-step active"><h2>Enter <em>your tag.</em></h2><p>Enter the 12-character code on the back of your tag to see who’s buying lunch and text them.</p>
       <form id="codeForm" novalidate><label for="tagNumber">Your tag code</label><div class="code-row"><input id="tagNumber" required maxlength="16" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX" aria-describedby="tagError"><button type="submit" class="button btn-submit">Find my host</button></div><p class="error hidden" id="tagError" role="alert"></p></form></div>
     <div id="step-1" class="claim-step result" aria-labelledby="resultHeading"><p class="credit">Your lunch host</p><h2 id="resultHeading" tabindex="-1">Meet <em id="activatorName">your host</em>.</h2><div class="person"><div id="activatorAvatar"></div><p id="activatorNote"></p></div><p class="phone" id="activatorPhone"></p><a id="textButton" class="button" href="#" aria-disabled="true">Text my host</a><p id="lookupStatus" role="status"></p><p class="minor">Under 18? Arrange lunch with your parent or guardian.</p><button id="anotherTag" class="text-link" type="button">Enter another tag</button></div>
     <noscript>Turn on JavaScript to look up your private code, or ask the person who gave you the tag to arrange lunch directly.</noscript>
@@ -90,7 +99,7 @@ if (location.hash.startsWith('#tag=')) {
 <footer><div class="closing" id="made-with-love"><p>Made with love<br><em>by Meadows.</em></p></div>
   <div class="credits"><a href="https://www.meadowsbaptist.org">Meadows Baptist Church, Plano</a> · <a href="admin.html">Host tools</a></div>
 </footer>
-<button type="button" id="quickTag" aria-label="Enter your tag" aria-haspopup="dialog"><img src="assets/collection/classic.webp" width="35" height="48" alt=""><span>My tag</span></button>
+<button type="button" id="quickTag" aria-label="Enter your tag" aria-haspopup="dialog"><img src="assets/collection/classic.webp" width="35" height="48" alt=""><span>Enter tag</span></button>
 <button type="button" id="continueFilm" aria-label="Scroll to the next scene"><span id="scrollCue">Scroll to follow the glass</span><span class="scroll-arrow" aria-hidden="true">↓</span></button>
 <dialog id="quickLookup" aria-label="Your Free Lunch Tag"><div class="lookup-frame"><button type="button" class="dismiss" id="closeLookup">Back to film</button><div id="lookupMount"></div></div></dialog>
 <dialog id="sceneDialog" aria-labelledby="sceneTitle"><div class="detail-frame"><button type="button" class="dismiss" id="closeScene">Back to film</button><h2 id="sceneTitle"></h2><div id="sceneContent"></div></div></dialog>
@@ -104,10 +113,11 @@ if (location.hash.startsWith('#tag=')) {
           <div class="edition-heading"><span class="edition-count">01 / 03</span><strong id="editionName" aria-live="polite">Classic Lightning</strong></div>
           <div class="edition-controls"><button id="flipTag" type="button" aria-pressed="false"><span id="flipLabel">Flip tag</span></button></div>
           <div class="selector" role="group" aria-label="Choose your collectible"><button type="button" data-choice="classic" aria-pressed="true">Classic</button><button type="button" data-choice="taco" aria-pressed="false">Taco</button><button type="button" data-choice="pizza" aria-pressed="false">Pizza</button></div>
+          <p class="collector-note">After lunch, the tag is yours to keep or trade. Each code stays with its original host.</p>
         </div>
       </div></div></div></dialog>
 <script type="module" src="pilot.js?v=one-take-1"></script>
 <script type="module" src="collection.js?v=one-take-1"></script>
 <script type="module" src="tag-viewer.js?v=one-take-1"></script>
-<script type="module" src="screening.js?v=touch-1"></script>
+<script type="module" src="screening.js?v=invitation-1"></script>
 </body></html>
