@@ -11,13 +11,13 @@ async function mountViewer(){
  function shader(type,code){const s=gl.createShader(type);gl.shaderSource(s,code);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error('Shader unavailable');return s;}
  const program=gl.createProgram();
  gl.attachShader(program,shader(gl.VERTEX_SHADER,`
- attribute vec3 p,n; attribute float m; uniform vec3 rotation; uniform float aspect,zoom;
+ attribute vec3 p,n; attribute float m; uniform vec3 rotation; uniform float aspect,zoom,travel;
  varying vec3 norm; varying vec2 uv; varying float mat;
  void main(){vec3 a=p*.01;vec3 v=a-vec3(0.,6.6,0.);vec3 cs=cos(rotation),sn=sin(rotation);
  mat3 ry=mat3(cs.y,0.,-sn.y,0.,1.,0.,sn.y,0.,cs.y);
  mat3 rx=mat3(1.,0.,0.,0.,cs.x,sn.x,0.,-sn.x,cs.x);
  mat3 rz=mat3(cs.z,sn.z,0.,-sn.z,cs.z,0.,0.,0.,1.);
- mat3 rot=rz*rx*ry;vec3 pos=rot*v;float depth=154.-pos.z;
+ mat3 rot=rz*rx*ry;vec3 pivot=vec3(0.,29.,0.);vec3 pos=rot*(v-pivot)+pivot;pos.xy+=travel*vec2(-16.,8.);float depth=154.-pos.z;
  gl_Position=vec4(pos.x*zoom/aspect,pos.y*zoom,depth-30.,depth);
  norm=normalize(rot*(n*.001));mat=m;uv=vec2(.5+(m>1.5?-a.x:a.x)/48.,.5+a.y/72.);
  }`));
@@ -36,7 +36,7 @@ async function mountViewer(){
  gl_FragColor=vec4(shade,1.);}`));
  gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('Viewer unavailable');
  gl.useProgram(program);gl.enable(gl.DEPTH_TEST);gl.clearColor(0,0,0,0);
- const loc={};for(const x of ['aspect','zoom','rotation','front','back'])loc[x]=gl.getUniformLocation(program,x);
+ const loc={};for(const x of ['aspect','zoom','travel','rotation','front','back'])loc[x]=gl.getUniformLocation(program,x);
  const attr=['p','n','m'].map(x=>gl.getAttribLocation(program,x));for(const x of attr)gl.enableVertexAttribArray(x);
  const base='assets/collection/';const cache=new Map();
  function cached(key,loader){if(!cache.has(key))cache.set(key,loader().catch(e=>{cache.delete(key);throw e;}));return cache.get(key);}
@@ -48,25 +48,98 @@ async function mountViewer(){
  for(const k of [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T])gl.texParameteri(gl.TEXTURE_2D,k,gl.CLAMP_TO_EDGE);
  for(const k of [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER])gl.texParameteri(gl.TEXTURE_2D,k,gl.LINEAR);return t;});}
  const [body,back]=await Promise.all([mesh('tag-hardware.bin'),texture('back.webp')]);
- let front,ink,active='',revision=0,angle=-.28,target=-.28,pitch=.05,wantPitch=.05,raf=0,drag=null,visible=true;
- function draw(){raf=0;if(!front||!ink||!visible)return;const w=Math.round(stage.clientWidth*Math.min(devicePixelRatio,2)),h=Math.round(stage.clientHeight*Math.min(devicePixelRatio,2));if(!w||!h)return;
- if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
- angle=reduce.matches?target:angle+(target-angle)*.16;pitch=reduce.matches?wantPitch:pitch+(wantPitch-pitch)*.16;
- gl.viewport(0,0,w,h);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniform1f(loc.aspect,w/h);gl.uniform1f(loc.zoom,3.23);
- gl.uniform3f(loc.rotation,pitch,angle,-.20);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,ink);gl.uniform1i(loc.front,0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,back);gl.uniform1i(loc.back,1);
- for(const s of [body,front]){gl.bindBuffer(gl.ARRAY_BUFFER,s.v);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,s.i);gl.vertexAttribPointer(attr[0],3,gl.SHORT,false,14,0);gl.vertexAttribPointer(attr[1],3,gl.SHORT,false,14,6);gl.vertexAttribPointer(attr[2],1,gl.SHORT,false,14,12);gl.drawElements(gl.TRIANGLES,s.count,gl.UNSIGNED_SHORT,0);}
- if(Math.abs(angle-target)+Math.abs(pitch-wantPitch)>.002)schedule();}
- function schedule(){if(!raf)raf=requestAnimationFrame(draw);}
- function rest(){target=panel.classList.contains('flipped')?Math.PI-.15:-.28;wantPitch=.05;schedule();}
- async function edition(){const id=panel.dataset.edition;if(id===active)return rest();const req=++revision;const [f,t]=await Promise.all([mesh('tag-'+id+'.bin'),texture(id+'.webp')]);if(req!==revision)return;
- front=f;ink=t;active=id;if(!reduce.matches)angle=-.7;rest();stage.classList.add('has-model');}
- stage.append(canvas);await edition();
- new MutationObserver(()=>edition().catch(()=>stage.classList.remove('has-model'))).observe(panel,{attributes:true,attributeFilter:['class','data-edition']});
- stage.addEventListener('pointerdown',e=>{drag=e.clientX;});
- stage.addEventListener('pointermove',e=>{if(reduce.matches)return;const rect=stage.getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width-.5,y=(e.clientY-rect.top)/rect.height-.5;
- target=(panel.classList.contains('flipped')?Math.PI-.15:-.28)+(drag===null?x*.82:(e.clientX-drag)*.018);wantPitch=y*.42;schedule();});
- for(const ev of ['pointerup','pointercancel','pointerleave'])stage.addEventListener(ev,()=>{drag=null;rest();});
- new ResizeObserver(schedule).observe(stage);new IntersectionObserver(es=>{visible=es[0].isIntersecting;if(visible)schedule();}).observe(stage);
+ let front, ink, editionId, requestId=0, visible=true, frame=0, previousTime=0;
+ let yaw=-.62, desiredYaw=-.18, pitch=.15, desiredPitch=.03, roll=-.30, scroll=0;
+ let swingStart=performance.now(), drag=null, hoverX=0;
+ const moving=()=>document.documentElement.dataset.motion!=='off'&&!reduce.matches;
+ function queue(){if(!frame&&visible&&!document.hidden)frame=requestAnimationFrame(draw);}
+ function rest(){
+   desiredYaw=panel.classList.contains('flipped')? Math.PI-.12 : -.18;
+   desiredYaw+=Math.round((yaw-desiredYaw)/(2*Math.PI))*2*Math.PI;
+   desiredPitch=.03; hoverX=0;queue();
+ }
+ function draw(now){
+   frame=0;
+   if(!front||!ink||!visible||document.hidden)return;
+   const w=Math.round(stage.clientWidth*Math.min(devicePixelRatio,2)),h=Math.round(stage.clientHeight*Math.min(devicePixelRatio,2));
+   if(!w||!h)return;
+   if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+   const dt=Math.min(.06,Math.max(.008,(now-previousTime)/1000||.016));previousTime=now;
+   const animate=moving(), blend=animate?1-Math.exp(-12*dt):1;
+   const elapsed=(now-swingStart)/1000;
+   const swing=animate&&elapsed<3.6?Math.exp(-elapsed*1.8)*Math.sin(elapsed*7+.7)*.27:0;
+   const travel=animate?scroll:0;
+   const targetRoll=-.13+swing+hoverX*.075+travel*.88;
+   yaw+=(desiredYaw-yaw)*blend;pitch+=(desiredPitch-pitch)*blend;roll+=(targetRoll-roll)*blend;
+   gl.viewport(0,0,w,h);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+   gl.uniform1f(loc.aspect,w/h);gl.uniform1f(loc.zoom,2.65+travel*.2);gl.uniform1f(loc.travel,travel);
+   gl.uniform3f(loc.rotation,pitch-travel*.24,yaw+travel*1.58,roll);
+   gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,ink);gl.uniform1i(loc.front,0);
+   gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,back);gl.uniform1i(loc.back,1);
+   for(const part of [body,front]){
+     gl.bindBuffer(gl.ARRAY_BUFFER,part.v);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,part.i);
+     gl.vertexAttribPointer(attr[0],3,gl.SHORT,false,14,0);gl.vertexAttribPointer(attr[1],3,gl.SHORT,false,14,6);gl.vertexAttribPointer(attr[2],1,gl.SHORT,false,14,12);
+     gl.drawElements(gl.TRIANGLES,part.count,gl.UNSIGNED_SHORT,0);
+   }
+   if(animate&&(elapsed<3.6||Math.abs(yaw-desiredYaw)+Math.abs(pitch-desiredPitch)+Math.abs(roll-targetRoll)>.001))queue();
+ }
+ async function selectEdition(){
+   const id=panel.dataset.edition, version=++requestId;
+   if(id===editionId){rest();return;}
+   try {
+     const [geometry,art]=await Promise.all([mesh('tag-'+id+'.bin'),texture(id+'.webp')]);
+     if(version!==requestId)return;
+     front=geometry;ink=art;editionId=id;swingStart=performance.now();
+     yaw=moving()?-.58:-.18;rest();stage.classList.add('has-model');
+   } catch {
+     if(version===requestId)stage.classList.remove('has-model');
+   }
+ }
+ stage.append(canvas);
+ stage.addEventListener('editionchange',selectEdition);
+ stage.addEventListener('posechange',rest);
+ stage.addEventListener('motionchange',()=>{drag=null;rest();});
+ stage.addEventListener('tabletravel',e=>{scroll=e.detail;queue();});
+ stage.addEventListener('pointerdown',e=>{
+   if(e.button!==0)return;
+   drag={id:e.pointerId,x:e.clientX,y:e.clientY,origin:yaw,horizontal:false};
+ });
+ stage.addEventListener('pointermove',e=>{
+   if(!moving())return;
+   const box=stage.getBoundingClientRect(),x=(e.clientX-box.left)/box.width-.5,y=(e.clientY-box.top)/box.height-.5;
+   if(drag&&drag.id===e.pointerId){
+     const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+     if(!drag.horizontal&&Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)){
+       drag.horizontal=true;stage.setPointerCapture(e.pointerId);
+     }
+     if(!drag.horizontal)return;
+     desiredYaw=drag.origin+dx/Math.max(190,box.width)*5.6;
+   }else{
+     if(e.pointerType!=='mouse')return;
+     desiredYaw=(panel.classList.contains('flipped')?Math.PI-.12:-.18)+x*.86;
+   }
+   hoverX=x;desiredPitch=y*.52;queue();
+ });
+ function endDrag(){
+   if(drag?.horizontal){
+     const backShowing=Math.cos(desiredYaw)<0;
+     if(backShowing!==panel.classList.contains('flipped'))document.getElementById('flipTag').click();
+   }
+   drag=null;rest();
+ }
+ stage.addEventListener('pointerup',endDrag);
+ stage.addEventListener('pointercancel',()=>{drag=null;rest();});
+ stage.addEventListener('pointerleave',()=>{if(!drag?.horizontal){drag=null;rest();}});
+ new ResizeObserver(queue).observe(stage);
+ new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)queue();}).observe(stage);
+ document.addEventListener('visibilitychange',queue);
  canvas.addEventListener('webglcontextlost',()=>{stage.classList.remove('has-model');visible=false;});
+ await selectEdition();
 }
-mountViewer().catch(()=>stage.classList.remove('has-model'));
+// The lookup and text are independent of WebGL. The cover uses the printed face until visible.
+const activation=new IntersectionObserver(entries=>{
+ if(!entries.some(entry=>entry.isIntersecting))return;
+ activation.disconnect();
+ mountViewer().catch(()=>stage.classList.remove('has-model'));
+});
+activation.observe(stage);

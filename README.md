@@ -4,6 +4,12 @@
 
 Existing public website: https://freelunchtag.com . Hosted on GitHub Pages; no ChatGPT Site or external database is required by this version.
 
+## The mobile-first site
+
+The home page runs directly from GitHub Pages. Its font, original artwork, WebGL shaders, and printable tag meshes are served from this repository. Update the section content in `index.html` and the scroll timings in `table-journey.js`. The plate, crystal fragments, and garden props are rendered by `glass-world.js`, `crystal-fragments.js`, and `garden-props.js`. The in-scene inscriptions are typeset from the page content in `in-scene-titles.js` and lit by `environment-type.js`. The side tag opens the same invitation form without losing the scroll position. The three tag models have their own viewer. A printed QR opens the host directly.
+
+Run `node --test scripts/page-flow.test.mjs` to check the original page order, QR entry, and required visual assets.
+
 ## Expansion plan for eight hosts and 80 physical tags
 
 The larger batch was prepared for Lauren, Andrew, Seth, Kelly, Scott, Charles, Jonathan and Nathan, with ten tags per host. It has separate references from the three starter invitations and needs separate approval and activation. Public profiles use first names; Seth and Scott photos are from the Meadows team page. Supply approved photos for the remaining six (initials are deliberate fallbacks).
