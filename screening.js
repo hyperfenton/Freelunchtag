@@ -1,9 +1,11 @@
 import {chapters, fps, lastFrame, makeRoute, mapValue, sceneAt} from './scroll-route.mjs?v=journey-1';
+import {mountFilmObjects, posterTimes} from './film-objects.mjs?v=touch-1';
 
 const byId=id=>document.getElementById(id);
 const root=document.documentElement, cinema=byId('cinema'), film=byId('storyFilm');
 const still=byId('stillFrame'), photo=still.querySelector('img'), widePhoto=still.querySelector('source');
-const object=byId('filmObject'), nextButton=byId('continueFilm'), options=byId('filmOptions');
+const objects=mountFilmObjects(byId('filmObjects'), activateObject);
+const nextButton=byId('continueFilm'), options=byId('filmOptions');
 const details=byId('sceneDialog'), content=byId('sceneContent'), title=byId('sceneTitle');
 const quick=byId('quickTag'), watch=byId('watchFilm'), cue=byId('scrollCue');
 const wide=matchMedia('(min-aspect-ratio:1/1)'), reduce=matchMedia('(prefers-reduced-motion:reduce)');
@@ -12,8 +14,10 @@ const dialogsOpen=()=>Boolean(document.querySelector('dialog[open]'));
 const motionOff=()=>reduce.matches||root.dataset.motion==='off'||navigator.connection?.saveData===true;
 const frameTime=t=>Math.max(0,Math.min(lastFrame,Math.round(t*fps)/fps));
 let route=[], selected=-1, wanted=0, sourceName='', ready=false, unavailable=false;
+let playbackEnd=null;
 let watching=false, wasOpen=false, tick=0, previousFrame=0, ownScroll=-1, relocated=null;
 function measure(){
+  objects.measure(wide.matches,getComputedStyle(film).objectFit);
   const last=Math.max(1,root.scrollHeight-innerHeight);
   route=makeRoute(chapters.map(ch=>byId(ch.id).getBoundingClientRect().top+scrollY),last);
 }
@@ -31,10 +35,10 @@ function setScene(t){
   cue.textContent=end?'Back to the table':'Scroll to follow the glass';
   if(i!==selected){
     selected=i;cinema.dataset.scene=chapters[i].id;
-    object.setAttribute('aria-label',chapters[i].label);object.hidden=false;
     nextButton.setAttribute('aria-label',i===chapters.length-1?'Back to the table':'Follow the camera to the next part');
     nextButton.classList.toggle('at-end',i===chapters.length-1);
   }
+  objects.show(cinema.classList.contains('on-film') ? t : posterTimes[chapters[i].still]);
 }
 function chooseFile(){
   if(motionOff()||dialogsOpen())return;
@@ -44,10 +48,12 @@ function chooseFile(){
   film.preload='auto';film.src=name;film.load();
 }
 function posterAt(t){
-  setScene(t);showPoster(sceneAt(t));cinema.classList.remove('on-film');
+  cinema.classList.remove('on-film');setScene(t);showPoster(sceneAt(t));
 }
 function reveal(){
-  if((watching||Math.abs(film.currentTime-wanted)<.5/fps||cinema.classList.contains('on-film'))&&ready&&!motionOff()&&!unavailable&&film.readyState>=2)cinema.classList.add('on-film');
+  if((watching||Math.abs(film.currentTime-wanted)<.5/fps||cinema.classList.contains('on-film'))&&ready&&!motionOff()&&!unavailable&&film.readyState>=2){
+    cinema.classList.add('on-film');objects.show(film.currentTime);
+  }
 }
 function schedule(){
   if(!tick&&!document.hidden&&!dialogsOpen())tick=requestAnimationFrame(render);
@@ -60,6 +66,9 @@ function render(now){
   tick=0;
   if(dialogsOpen()||document.hidden)return;
   if(watching){
+    if(playbackEnd!==null && film.currentTime>=playbackEnd){
+      const end=playbackEnd;stopWatching();jumpToFrame(end);return;
+    }
     wanted=frameTime(film.currentTime);setScene(wanted);
     ownPosition(mapValue(route,wanted,true));schedule();return;
   }
@@ -88,8 +97,45 @@ function followScroll(){
 }
 function stopWatching(){
   if(!watching)return;
-  watching=false;film.pause();watch.textContent='Watch as a film';
+  watching=false;playbackEnd=null;film.pause();watch.textContent='Watch as a film';
 }
+function jumpToFrame(time){
+  wanted=frameTime(time);
+  ownPosition(mapValue(route,wanted,true));
+  if(!ready||motionOff()||unavailable){posterAt(wanted);return;}
+  film.currentTime=wanted;
+  schedule();
+}
+
+function playObjectMove(end, fallback){
+  if(motionOff()||unavailable||!ready){jumpToFrame(fallback);return;}
+  playbackEnd=end;
+  watching=true;
+  watch.textContent='Return to scrolling';
+  film.play().then(schedule).catch(()=>{stopWatching();jumpToFrame(fallback);});
+}
+
+function activateObject(track,button,displayedTime){
+  if(button.hidden||dialogsOpen())return;
+  closeMenu();
+  stopWatching();
+  if(cinema.classList.contains('on-film')&&Math.abs(wanted-displayedTime)>.5/fps)jumpToFrame(displayedTime);
+  switch(track.id){
+    case 'plate': playObjectMove(4.83,6.65);return;
+    case 'pail': playObjectMove(29.8,28.85);return;
+    case 'shard': playObjectMove(35.83,35.55);return;
+    case 'crystal':
+    case 'tag': byId('inspectTag').click();break;
+    case 'card': quick.click();break;
+    case 'bowl': sceneDetails('lunch');break;
+    case 'flowers': sceneDetails('bonus');break;
+  }
+  const dialog=byId(track.dialog);
+  if(dialog.open)dialog.addEventListener('close',()=>{
+    if(!button.hidden&&!dialogsOpen())button.focus({preventScroll:true});
+  },{once:true});
+}
+
 function watchFilm(){
   closeMenu();
   if(watching){stopWatching();followScroll();return;}
@@ -118,7 +164,11 @@ addEventListener('keydown',e=>{
 });
 film.addEventListener('loadedmetadata',()=>{ready=true;previousFrame=0;schedule();});
 film.addEventListener('loadeddata',()=>{schedule();reveal();});
-film.addEventListener('seeked',()=>{setScene(film.currentTime);reveal();schedule();});
+film.addEventListener('seeked',()=>{
+  // A seek from the previous orientation can complete after a poster takes over.
+  if(motionOff()||unavailable||!ready)return;
+  setScene(film.currentTime);reveal();schedule();
+});
 film.addEventListener('ended',()=>{stopWatching();wanted=lastFrame;ownPosition(mapValue(route,wanted,true));setScene(wanted);});
 film.addEventListener('error',()=>{stopWatching();unavailable=true;ready=false;posterAt(wanted);});
 function updateMotion(){
@@ -145,15 +195,15 @@ function moveHere(node){
 function copyElements(selector){
   document.querySelectorAll(selector).forEach(n=>content.append(n.cloneNode(true)));
 }
-function sceneDetails(){
+function sceneDetails(id=chapters[selected].id){
   closeMenu();
   if(dialogsOpen())return;
-  const ch=chapters[selected],section=byId(ch.id);
-  if(ch.id==='claim'){quick.click();return;}
+  const section=byId(id);
+  if(id==='claim'){quick.click();return;}
   content.replaceChildren();
   const heading=section.querySelector('h1,h2')?.innerText||'Made with love by Meadows.';
   title.textContent=heading.replace(/\s+/g,' ').trim();
-  switch(ch.id){
+  switch(id){
     case 'hero':copyElements('#hero .lede');break;
     case 'lunch':copyElements('#lunch p');break;
     case 'hosts':moveHere(section.querySelector('.people'));break;
@@ -170,10 +220,7 @@ function sceneDetails(){
   }
   details.showModal();byId('closeScene').focus();
 }
-byId('readScene').addEventListener('click',sceneDetails);
-object.addEventListener('click',()=>{
-  sceneDetails();
-});
+byId('readScene').addEventListener('click',()=>sceneDetails());
 byId('closeScene').addEventListener('click',()=>details.close());
 details.addEventListener('close',()=>{
   if(relocated){
@@ -181,7 +228,7 @@ details.addEventListener('close',()=>{
     relocated.slot.replaceWith(relocated.node);relocated=null;
   }
   content.replaceChildren();
-  object.focus({preventScroll:true});
+  options.querySelector('summary').focus({preventScroll:true});
 });
 
 function watchDialogs(){

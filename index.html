@@ -15,7 +15,7 @@ if (location.hash.startsWith('#tag=')) {
 <meta name="theme-color" content="#120d25">
 <link rel="canonical" href="https://freelunchtag.com/"><link rel="icon" href="LOGO.PNG"><link rel="apple-touch-icon" href="LOGO.PNG"><link rel="manifest" href="manifest.json">
 <meta property="og:type" content="website"><meta property="og:url" content="https://freelunchtag.com/"><meta property="og:title" content="Free Lunch Tag · Lunch is on us."><meta property="og:description" content="A little tag. A real invitation to lunch with someone from Meadows in Plano."><meta property="og:image" content="https://freelunchtag.com/assets/film/film-lift-wide.webp?v=journey-1"><meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="screening.css?v=journey-1">
+<link rel="stylesheet" href="screening.css?v=touch-1">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="assets/collection/barlow-condensed-extrabold.woff2">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Free Lunch Tag","url":"https://freelunchtag.com/","description":"Collectible invitations to a free meal with a Meadows host in Plano, Texas.","publisher":{"@type":"Organization","name":"Meadows Baptist Church","url":"https://www.meadowsbaptist.org"}}</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-GGHV06ZDYR"></script>
@@ -36,6 +36,7 @@ if (location.hash.startsWith('#tag=')) {
     </div>
   </details>
 </header>
+<div id="filmObjects" role="group" aria-label="Objects in the film"></div>
 <main>
   <section id="hero" class="hero" aria-labelledby="hero-title">
     <div class="frame hero-grid">
@@ -90,7 +91,6 @@ if (location.hash.startsWith('#tag=')) {
   <div class="credits"><a href="https://www.meadowsbaptist.org">Meadows Baptist Church, Plano</a> · <a href="admin.html">Host tools</a></div>
 </footer>
 <button type="button" id="quickTag" aria-label="Enter your tag" aria-haspopup="dialog"><img src="assets/collection/classic.webp" width="35" height="48" alt=""><span>My tag</span></button>
-<button type="button" id="filmObject" hidden></button>
 <button type="button" id="continueFilm" aria-label="Scroll to the next scene"><span id="scrollCue">Scroll to follow the glass</span><span class="scroll-arrow" aria-hidden="true">↓</span></button>
 <dialog id="quickLookup" aria-label="Your Free Lunch Tag"><div class="lookup-frame"><button type="button" class="dismiss" id="closeLookup">Back to film</button><div id="lookupMount"></div></div></dialog>
 <dialog id="sceneDialog" aria-labelledby="sceneTitle"><div class="detail-frame"><button type="button" class="dismiss" id="closeScene">Back to film</button><h2 id="sceneTitle"></h2><div id="sceneContent"></div></div></dialog>
@@ -109,5 +109,5 @@ if (location.hash.startsWith('#tag=')) {
 <script type="module" src="pilot.js?v=one-take-1"></script>
 <script type="module" src="collection.js?v=one-take-1"></script>
 <script type="module" src="tag-viewer.js?v=one-take-1"></script>
-<script type="module" src="screening.js?v=journey-1"></script>
+<script type="module" src="screening.js?v=touch-1"></script>
 </body></html>

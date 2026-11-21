@@ -53,3 +53,32 @@ test('scroll distance and film time round-trip at chapter boundaries and in betw
   }
   assert.equal(mapValue(route,-150),0);assert.equal(mapValue(route,end+150),lastFrame);
 });
+
+test('only objects in the displayed footage accept taps',async()=>{
+  const {filmObjects,mediaFrame,objectBounds,posterTimes}=await import('../film-objects.mjs');
+  const mobile=mediaFrame(390,844,false,'cover');
+  const visible=t=>filmObjects.filter(o=>objectBounds(o,t,mobile)).map(o=>o.id);
+  assert.deepEqual(visible(0),['plate']);
+  assert.deepEqual(visible(3.2),[]);
+  assert.deepEqual(visible(posterTimes.broom),['card','tag']);
+  assert.deepEqual(visible(posterTimes.visit),['shard']);
+  assert.deepEqual(visible(posterTimes.close),['flowers']);
+  const [card,tag]=['card','tag'].map(id=>objectBounds(filmObjects.find(o=>o.id===id),10.9,mobile));
+  assert.ok(tag.x+tag.width<=card.x,'separate chair objects');
+});
+
+test('visible object bounds fit both the video and the screen after cropping or letterboxing',async()=>{
+  const {filmObjects,mediaFrame,objectBounds}=await import('../film-objects.mjs');
+  for(const [w,h,wide,fit] of [[320,694,false,'cover'],[1024,960,true,'contain'],[844,390,true,'cover'],[280,820,false,'contain']]){
+    const frame=mediaFrame(w,h,wide,fit);
+    for(const obj of filmObjects){
+      for(let t=0;t<=36;t+=.125){
+        const b=objectBounds(obj,t,frame);
+        if(!b)continue;
+        assert.ok(b.x>=Math.max(0,frame.x)-.01 && b.y>=Math.max(0,frame.y)-.01);
+        assert.ok(b.x+b.width<=Math.min(w,frame.x+frame.w)+.01 && b.y+b.height<=Math.min(h,frame.y+frame.h)+.01);
+        assert.ok(b.width>=44 && b.height>=44,'minimum tap area for '+obj.id);
+      }
+    }
+  }
+});
