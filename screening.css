@@ -16,7 +16,7 @@ html.projecting{background:#0e0a17;color:#fffbf7}
 @media(max-aspect-ratio:9/19){#cinema img,#storyFilm{object-fit:contain;background:#0e0b18}}
 @media(min-aspect-ratio:21/9){#cinema img,#storyFilm{object-fit:contain}}
 .projecting main>section,.projecting .closing{position:relative;height:100svh;min-height:480px;padding:0;pointer-events:none}
-.projecting main>#hero{height:118svh}.projecting main>#how{height:135svh}.projecting main>.nightfall{height:12svh}
+.projecting main>#hero{height:118svh}.projecting main>#how{height:135svh}
 .projecting main>section>.frame,.projecting .closing p,.projecting .credits{position:absolute!important;clip-path:inset(50%);overflow:hidden;width:1px;height:1px;margin:-1px;padding:0;white-space:normal}
 .projecting footer{padding:0}.projecting .closing{width:100%;height:100svh}
 .projecting .film-tools{display:block;position:fixed;right:max(13px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));z-index:5;color:#fff}
@@ -60,6 +60,6 @@ dialog::backdrop{background:#100b1bbf;backdrop-filter:blur(4px)}body:has(dialog[
 .neighbor{position:absolute;top:18%;height:46%;width:clamp(75px,16vw,190px);border:0;background:none;filter:drop-shadow(3px 7px 4px #11082166)}.neighbor img{width:100%;height:100%;object-fit:contain}.neighbor.prev{left:0;transform:rotate(-15deg)}.neighbor.next{right:0;transform:rotate(15deg)}.neighbor:hover{scale:1.05}
 @media(max-width:620px){.scene{height:min(50dvh,410px)}.neighbor{width:18%}.gallery-header h2{font-size:2.5rem}.person{align-items:flex-start}.code-row .button{width:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
-#cinema::before{content:"";position:absolute;inset:-18px;background:var(--surround) center/cover;filter:blur(18px) brightness(.48);pointer-events:none}
-#cinema img,#storyFilm{background:transparent}
-@media(max-aspect-ratio:9/19), (min-aspect-ratio:1/1) and (max-aspect-ratio:7/5), (min-aspect-ratio:21/9){#cinema img,#storyFilm{object-fit:contain}}
+/* Keep the optical frame edge to edge on phones, with a matte on unusually wide or square screens. */
+@media(min-aspect-ratio: 2/5) and (max-aspect-ratio: 9/19){#cinema img,#storyFilm{object-fit:cover}}
+@media(min-aspect-ratio:1/1) and (max-aspect-ratio:7/5){#cinema img,#storyFilm{object-fit:contain}}

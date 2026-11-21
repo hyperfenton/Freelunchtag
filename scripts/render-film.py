@@ -1,346 +1,329 @@
-#!/usr/bin/env python3
-"""Render the Free Lunch Tag photographic film from its 24 portrait/wide WebP masters.
+"""Render a 46-second optical tracking shot through a photographic miniature set.
 
-Requires Python 3.10+, numpy, opencv-python and an ffmpeg build with libx264.
-Example: python render-film.py --input assets/film --portrait assets/free-lunch-portrait.mp4 --wide assets/free-lunch-wide.mp4
-The source files are film-SHOT.webp and film-SHOT-wide.webp. All animation is
-deterministic and reversible in the resulting short-GOP, silent MP4.
+Requires numpy, scipy, opencv-python, numba, and ffmpeg. From the repository root:
+    python3 scripts/render-film.py --format portrait
+    python3 scripts/render-film.py --format wide
+
+The same lens rig, set coordinates and 1,000+ pieces of the original plate are
+evaluated at every frame. The cameras differ only in sensor framing.
 """
-from __future__ import annotations
 import argparse
-from pathlib import Path
 import math
-import shutil
 import subprocess
-import sys
+from pathlib import Path
+
 import cv2
 import numpy as np
+from numba import njit
+from scipy.interpolate import PchipInterpolator
+from scipy.spatial import Delaunay
 
+ROOT = Path(__file__).resolve().parent.parent
+ASSETS = ROOT / 'assets'
 FPS = 24
-TIMELINE = [
-    ('lift',60), ('shatter',30), ('emblem',54), ('floor',96), ('host',96),
-    ('broom',144), ('toss',96), ('story',96), ('why',96), ('claim',96),
-    ('night',24), ('visit',96), ('close',120),
-]
+DURATION = 46
+cv2.setNumThreads(2)
 
+def ease(a, b, t):
+    v = np.clip((t-a)/(b-a), 0, 1)
+    return v*v*(3-2*v)
 
-def sat(x):
-    return min(1.,max(0.,x))
+def path(points):
+    keys = np.asarray(points)
+    return PchipInterpolator(keys[:,0], keys[:,1:], axis=0)
 
+# Lens center and horizontal span on the portrait sensor. Distances are set
+# coordinates in the projection photographed for conservatory.webp.
+TRACK = path([
+    (0,440,224,227), (1.6,441,194,220), (2.85,443,159,216),
+    (4.1,446,176,228), (5.25,449,177,196), (6,450,227,226),
+    (6.85,438,380,260), (7.8,418,502,212), (8.7,419,515,178),
+    (9.5,424,513,178), (10.65,550,499,211), (11.4,615,487,170),
+    (13.1,618,486,163), (14.5,708,510,222), (15.8,793,507,196),
+    (17.7,800,508,179), (18.9,914,498,224), (20.6,1051,456,230),
+    (22.1,1167,445,246), (23.4,1228,486,252), (24.8,1284,519,200),
+    (26.6,1296,532,174), (27.5,1303,530,179), (29,1436,544,188),
+    (30.6,1460,545,180), (31.7,1475,543,186),
+    (33.2,1601,526,185), (35.2,1619,526,162), (36.4,1642,524,179),
+    (37.8,1748,516,198), (39.7,1772,516,178), (40.65,1783,521,185),
+    (41.9,1866,537,207), (43.2,1950,550,217), (45.95,1959,541,205)])
+POSTERS={'lift':0,'shatter':3.14,'emblem':4.9,'floor':8.7,'host':12,
+         'broom':17,'toss':21.65,'story':26.5,'why':30.6,'claim':35.1,
+         'visit':39.6,'close':45.3}
 
-def ease(x):
-    t=sat(x)
-    return t*t*(3.-2.*t)
+class Lens:
+    def __init__(self, t, width, height):
+        x,y,span = TRACK(min(t,45.95))
+        self.w,self.h=width,height
+        self.x=x+.7*math.sin(t*.8)
+        frame_width=span*(2.02 if width>height else 1.)
+        self.scale=width/frame_width
+        half_height=height/(2*self.scale)
+        self.y=np.clip(y+.6*math.sin(t*.63),half_height+1,723-half_height)
+        # A tiny roll as the lens rides the last broom pass.
+        angle=.003*math.sin(t*.59)+.025*math.sin(math.pi*ease(18,23,t))
+        self.c,self.s=math.cos(angle),math.sin(angle)
+        self.distance=1650*span/200
 
+    def factor(self,z):
+        return self.scale*self.distance/(self.distance-z)
 
-def lerp(a,b,t):
-    return a+(b-a)*t
+    def project(self,x,y,z=0):
+        q=self.factor(z)
+        dx,dy=x-self.x,y-self.y
+        return self.w*.5+q*(self.c*dx+self.s*dy),self.h*.5+q*(-self.s*dx+self.c*dy)
 
+def sprite_asset(folder,name):
+    raw=cv2.imread(str(folder/(name+'.webp')),cv2.IMREAD_UNCHANGED)
+    alpha=raw[:,:,3:4].astype(np.float32)/255
+    return np.ascontiguousarray(np.concatenate((raw[:,:,:3]*alpha,alpha*255),axis=2).astype(np.uint8))
 
-def color_fade(a,b,t):
-    return cv2.addWeighted(a,1-t,b,t,0)
+def composite(dst, asset, corners):
+    """Project premultiplied photography into the current lens with physical occlusion."""
+    h,w=asset.shape[:2]
+    p=np.asarray(corners,np.float32)
+    lo=np.maximum(np.floor(p.min(axis=0)).astype(int)-1,0)
+    hi=np.minimum(np.ceil(p.max(axis=0)).astype(int)+2,[dst.shape[1],dst.shape[0]])
+    ww,hh=hi-lo
+    if min(ww,hh)<1:return
+    roi=dst[lo[1]:hi[1],lo[0]:hi[0]]
+    # The fourth corner is implicit for each planar prop.
+    m=cv2.getAffineTransform(np.float32([[0,0],[w,0],[0,h]]),p[[0,1,3]]-lo.astype(np.float32))
+    rendered=cv2.warpAffine(asset,m,(ww,hh),flags=cv2.INTER_LINEAR,borderMode=cv2.BORDER_CONSTANT)
+    inv=cv2.bitwise_not(rendered[:,:,3])
+    roi[:]=cv2.add(rendered[:,:,:3],cv2.multiply(roi,cv2.merge((inv,inv,inv)),scale=1/255))
 
+def card(dst,lens,asset,x,base,w,z=0,angle=0,squash=1,lean=0):
+    # (x,base) is the foot/contact point, not a screen coordinate.
+    h=w*asset.shape[0]/asset.shape[1]*squash
+    c,s=math.cos(angle),math.sin(angle)
+    corners=[]
+    for u,v in [(-.5,-1),(.5,-1),(.5,0),(-.5,0)]:
+        dx=u*w+v*lean
+        dy=v*h
+        corners.append(lens.project(x+c*dx-s*dy,base+s*dx+c*dy,z))
+    composite(dst,asset,corners)
 
-def camera(frame, zoom, pan_x=0., pan_y=0., roll=0., anchor=(.5,.5)):
-    h,w=frame.shape[:2]
-    m=cv2.getRotationMatrix2D((w*anchor[0],h*anchor[1]),roll,zoom)
-    m[:,2]+=np.array([pan_x*w,pan_y*h])
-    return cv2.warpAffine(frame,m,(w,h),flags=cv2.INTER_LINEAR,borderMode=cv2.BORDER_REFLECT101)
+# A soft floor-contact print for each prop. The low sunlight travels from the right.
+yy,xx=np.mgrid[-1:1:72j,-1:1:160j]
+SHADOW=np.zeros((72,160,4),np.uint8)
+SHADOW[:,:,3]=np.uint8(105*np.exp(-3.8*xx**2-5*yy**2)*(1-xx**2)*(1-yy**2))
+def shade(dst,lens,x,y,w,z=0,stretch=1):
+    q=w*stretch*.16
+    corners=[lens.project(x+u*w,y+v*q,z) for u,v in [(-.79,-.6),(.51,-.6),(.51,.7),(-.79,.7)]]
+    composite(dst,SHADOW,corners)
 
-
-def load_frame(path,size):
-    photo=cv2.imread(str(path),cv2.IMREAD_COLOR)
-    if photo is None:
-        raise FileNotFoundError(path)
-    w,h=size
-    oh,ow=photo.shape[:2]
-    ratio=max(w/ow,h/oh)
-    sw,sh=round(ow*ratio),round(oh*ratio)
-    resized=cv2.resize(photo,(sw,sh),interpolation=cv2.INTER_AREA if ratio<1 else cv2.INTER_CUBIC)
-    x,y=(sw-w)//2,(sh-h)//2
-    return resized[y:y+h,x:x+w].copy()
-
-
-def polish_background(image,mask):
-    # The removed region is mostly hidden by the displaced object. Inpaint the
-    # narrow exposed strip using the local blue light and reflections beneath it.
-    h,w=image.shape[:2]
-    reduced=(max(1,w//3),max(1,h//3))
-    small=cv2.resize(image,reduced,interpolation=cv2.INTER_AREA)
-    solid=cv2.dilate(mask,np.ones((5,5),np.uint8))
-    mini=cv2.resize(solid,reduced,interpolation=cv2.INTER_AREA)
-    clean=cv2.inpaint(small,np.uint8(mini>7)*255,4,cv2.INPAINT_TELEA)
-    back=cv2.resize(clean,(w,h),interpolation=cv2.INTER_CUBIC)
-    a=cv2.GaussianBlur(solid,(5,5),1.1)
-    return cv2.blendLinear(image,back,1.-a.astype(np.float32)/255.,a.astype(np.float32)/255.)
-
-
-class Cutout:
-    """A photograph's original color and matte, rendered as premultiplied pixels."""
-    def __init__(self, image, mask):
-        x,y,w,h=cv2.boundingRect(mask)
-        self.x,self.y=x,y
-        a=cv2.GaussianBlur(mask,(3,3),.62)[y:y+h,x:x+w]
-        rgb=image[y:y+h,x:x+w]
-        pm=cv2.multiply(rgb,cv2.merge([a,a,a]),scale=1./255.)
-        self.rgba=cv2.merge([*cv2.split(pm),a])
-        self.w,self.h=w,h
-
-    def place(self, dest, pivot, angle=0., stretch=(1.,1.), offset=(0.,0.),alpha=1.,warp=0.):
-        if alpha<.005:return
-        h,w=dest.shape[:2]
-        s,c=math.sin(math.radians(angle)),math.cos(math.radians(angle))
-        transform=np.array([[c*stretch[0],-s*stretch[1]+warp],[s*stretch[0],c*stretch[1]]],np.float32)
-        p=np.float32(pivot)
-        tr=p+np.float32(offset)+transform@(np.float32([self.x,self.y])-p)
-        corners=np.array([[0,0],[self.w,0],[0,self.h],[self.w,self.h]],np.float32)@transform.T+tr
-        lo=np.maximum([0,0],np.floor(corners.min(axis=0)-1)).astype(int)
-        hi=np.minimum([w,h],np.ceil(corners.max(axis=0)+1)).astype(int)
-        if (hi<=lo).any():return
-        m=np.column_stack((transform,tr-lo)).astype(np.float32)
-        layer=cv2.warpAffine(self.rgba,m,tuple(hi-lo),flags=cv2.INTER_LINEAR,borderMode=cv2.BORDER_CONSTANT)
-        roi=dest[lo[1]:hi[1],lo[0]:hi[0]]
-        a=layer[:,:,3]
-        if alpha<.999:
-            layer=cv2.convertScaleAbs(layer,alpha=alpha);a=layer[:,:,3]
-        np.copyto(roi,cv2.add(layer[:,:,:3],cv2.multiply(roi,cv2.merge([255-a]*3),scale=1./255.)))
-
-
-def brush_matte(source, contour, warm_only=False):
-    h,w=source.shape[:2]
-    poly=np.int32(np.array(contour)*[w,h])
-    initial=np.zeros((h,w),np.uint8)
-    cv2.fillPoly(initial,[poly],255)
-    # Warm broomcorn has a clean chromatic separation from both violet tile and
-    # galvanized steel. GrabCut preserves the ragged ends and strands of the broom.
-    small=cv2.resize(source,(w//2,h//2),interpolation=cv2.INTER_AREA)
-    pm=cv2.resize(initial,(w//2,h//2),interpolation=cv2.INTER_NEAREST)
-    sel=np.where(pm,cv2.GC_PR_FGD,cv2.GC_BGD).astype(np.uint8)
-    if warm_only:
-        hsv=cv2.cvtColor(small,cv2.COLOR_BGR2HSV)
-        fiber=((hsv[:,:,0] < 30) | (hsv[:,:,0] > 169)) & (hsv[:,:,1]>57) & (pm>0)
-        sel[fiber]=cv2.GC_FGD
-        sel[(pm!=0)&~fiber]=cv2.GC_PR_BGD
-    else:
-        middle=cv2.erode(pm,np.ones((9,9),np.uint8))
-        sel[middle>0]=cv2.GC_FGD
-    model=(np.zeros((1,65),np.float64),np.zeros((1,65),np.float64))
-    cv2.grabCut(small,sel,None,*model,2,cv2.GC_INIT_WITH_MASK)
-    out=cv2.resize(np.uint8((sel==1)|(sel==3))*255,(w,h),interpolation=cv2.INTER_LINEAR)
-    return cv2.bitwise_and(out,initial)
-
+@njit
+def draw_triangles(dst, tex, projected, uv, gain):
+    H,W=dst.shape[:2]
+    for i in range(len(projected)):
+        p=projected[i]; a,b,c=p[0],p[1],p[2]
+        det=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])
+        if abs(det)<.13:continue
+        xmin=max(0,int(math.floor(min(a[0],b[0],c[0]))))
+        xmax=min(W-1,int(math.ceil(max(a[0],b[0],c[0]))))
+        ymin=max(0,int(math.floor(min(a[1],b[1],c[1]))))
+        ymax=min(H-1,int(math.ceil(max(a[1],b[1],c[1]))))
+        A,B,C=uv[i,0],uv[i,1],uv[i,2]
+        for y in range(ymin,ymax+1):
+            for x in range(xmin,xmax+1):
+                dx,dy=x+.5-a[0],y+.5-a[1]
+                v=(dx*(c[1]-a[1])-dy*(c[0]-a[0]))/det
+                k=((b[0]-a[0])*dy-(b[1]-a[1])*dx)/det
+                j=1-v-k
+                if min(v,k,j)<0:continue
+                u=min(tex.shape[1]-1,max(0,int(A[0]*j+B[0]*v+C[0]*k)))
+                row=min(tex.shape[0]-1,max(0,int(A[1]*j+B[1]*v+C[1]*k)))
+                color=tex[row,u]; alpha=color[3]/255
+                for ch in range(3):
+                    dst[y,x,ch]=min(255.,dst[y,x,ch]*(1-alpha)+color[ch]*gain[i])
 
 class Fracture:
-    def __init__(self,image,center,axes):
-        rng=np.random.default_rng(1703)
-        self.pieces=[]
-        cx,cy=center;rx,ry=axes
-        # An initial 40 triangles and twelve 80-triangle annuli exactly tile the plate.
-        rings=[np.repeat([[cx,cy]],40,axis=0)]
-        for ring in range(1,14):
-            theta=(np.arange(40)+((ring%2)*.42)+rng.uniform(-.20,.20,40))*math.tau/40
-            radius=math.sqrt(ring/13)*(1+rng.uniform(-.018,.018,40)*(ring<13))
-            rings.append(np.column_stack((cx+rx*radius*np.cos(theta),cy+ry*radius*np.sin(theta))))
-        tri=[]
-        for j in range(1,14):
-            a,b=rings[j-1],rings[j]
-            for k in range(40):
-                n=(k+1)%40
-                tri.append(np.array([a[k],b[k],b[n]]))
-                if j>1:tri.append(np.array([a[k],b[n],a[n]]))
-        h,w=image.shape[:2]
-        for points in tri:
-            p=np.mean(points,axis=0)
-            lx,ly=(p-[cx,cy])/[rx,ry]
-            lo=np.maximum([0,0],np.floor(points.min(axis=0)-1)).astype(int)
-            hi=np.minimum([w,h],np.ceil(points.max(axis=0)+1)).astype(int)
-            mask=np.zeros((hi[1]-lo[1],hi[0]-lo[0]),np.uint8)
-            cv2.fillConvexPoly(mask,np.int32((points-lo)*16),255,lineType=cv2.LINE_AA,shift=4)
-            piece=Cutout(image[lo[1]:hi[1],lo[0]:hi[0]],mask)
-            piece.x+=lo[0];piece.y+=lo[1]
-            vx=lx*rng.uniform(.10,.30)+rng.normal(0,.085)
-            vy=-rng.uniform(.22,.52)+ly*.06
-            self.pieces.append((piece,p,vx,vy,rng.uniform(-180,180),rng.uniform(.5,3.8),rng.uniform(.17,.98)))
-        assert len(self.pieces)==1000
-        self.w,self.h=w,h
+    def __init__(self,plate):
+        self.tex=plate
+        rng=np.random.default_rng(72067)
+        H,W=plate.shape[:2]
+        # Tessellate the complete rectangle, including the plate's alpha boundary.
+        points=rng.random((870,2))*[W-1,H-1]
+        edge=np.linspace(0,1,36)
+        border=np.concatenate([np.c_[edge,np.zeros(36)],np.c_[edge,np.ones(36)],np.c_[np.zeros(36),edge],np.c_[np.ones(36),edge]])
+        points=np.vstack([points,border*[W-1,H-1]])
+        uv=points[Delaunay(points).simplices]
+        self.uv=np.ascontiguousarray(uv)
+        geo=(uv-[W/2,H])*[182/W,182/W*1.52]
+        self.mid=geo.mean(1)
+        self.local=geo-self.mid[:,None,:]
+        n=len(uv)
+        self.noise=rng.uniform(-1,1,(9,n))
+        self.floorx=440+self.mid[:,0]*1.99+self.noise[1]*32
+        self.floory=561+self.noise[2]*33
+        self.release=2.88
+        self.start_y=194
+        self.gravity=393
+        self.vy=-68+self.noise[3]*49
+        self.landing=(-self.vy+np.sqrt(self.vy**2+2*self.gravity*(self.floory-(self.start_y+self.mid[:,1]))))/self.gravity
+        self.garden_x=1200+(self.noise[0]+1)*387+self.noise[8]*35
+        self.garden_y=566+self.noise[2]*51
+        self.z=self.noise[4]*36
+        a=np.abs(self.noise[0])
+        self.colors=1+.45*a
+        self.order=np.argsort(self.z)
 
-    def render(self,frame,t):
-        if t>.93:return
-        for piece,p,vx,vy,rotation,flutter,life in self.pieces:
-            fade=1-ease((t-(.30+life*.28))/.32)
-            if fade<.02:continue
-            sx=.24+.76*abs(math.cos(t*flutter*2.8))
-            sy=1.-.34*t
-            piece.place(frame,p,rotation*t,(sx,sy),(vx*t*self.w,(vy*t+.30*t*t)*self.h),fade)
+    def draw(self,dst,lens,t,group=None):
+        age=t-self.release
+        if age<0:return
+        m=self.mid;n=self.noise
+        time=np.minimum(age,self.landing)
+        impact=np.maximum(0,age-self.landing)
+        hop=31*np.abs(np.sin(impact*9))*np.exp(-impact*2.6)
+        x=441+m[:,0]+(self.floorx-441-m[:,0])*time/self.landing
+        y=self.start_y+m[:,1]+self.vy*time+.5*self.gravity*time**2-hop
+        # The same pieces follow the leading bristles to the pail, which then
+        # carries them past the threshold. No particle system is restarted.
+        swept=ease(12.7+(self.floorx-240)/83,18.75,t)
+        bx,by,bang=pail_pose(t)
+        pocket_x=bx+np.sin(bang)*55+n[1]*12
+        pocket_y=by-np.cos(bang)*54+n[2]*8
+        x=x*(1-swept)+pocket_x*swept
+        y=y*(1-swept)+pocket_y*swept-11*np.sin(np.pi*swept)
+        launched=ease(21.1+(n[5]+1)*.42,23.6+(n[7]+1)*1.36,t)
+        x=x*(1-launched)+self.garden_x*launched
+        y=y*(1-launched)+self.garden_y*launched-220*np.sin(np.pi*launched)
+        spin=(np.minimum(time,1.9)+.14*(1-np.exp(-impact*3))+swept*1.8+launched*2)*(n[5]*4.6)
+        cs,sn=np.cos(spin),np.sin(spin)
+        # Pieces tip toward the floor after impact and catch the light as they turn.
+        sy=1-ease(0,.86,age)*(.60+.30*np.cos(spin*1.4))
+        local=self.local
+        u=local[:,:,0];v=local[:,:,1]*sy[:,None]
+        xx=x[:,None]+u*cs[:,None]-v*sn[:,None]
+        yy=y[:,None]+u*sn[:,None]+v*cs[:,None]
+        z=self.z*ease(0,1.1,age)+19*launched
+        X,Y=lens.project(xx,yy,z[:,None])
+        gain=1+(.21*np.sin(spin*2+n[6]*3)+.36*np.maximum(0,np.sin(spin*4+n[1]*6))**12)*ease(0,.6,age)
+        inds=self.order
+        if group=='flying':inds=inds[launched[inds]>.035]
+        elif group=='inside':inds=inds[launched[inds]<=.035]
+        draw_triangles(dst,self.tex,np.ascontiguousarray(np.stack((X[inds],Y[inds]),axis=-1)),self.uv[inds],gain[inds])
 
+def pail_pose(t):
+    carry=ease(18.0,22.25,t)
+    tip=ease(20.4,22.5,t)*(1-ease(23.2,25.6,t))
+    return 889+273*carry,566-92*carry-34*math.sin(math.pi*carry)+83*ease(23.2,25.6,t),1.62*tip-.11*math.sin(math.pi*carry)
 
-def trajectory(keys,t):
-    for (a,va),(b,vb) in zip(keys,keys[1:]):
-        if t<=b:return lerp(va,vb,ease((t-a)/(b-a)))
-    return keys[-1][1]
+class Set:
+    def __init__(self,root):
+        self.root=root; folder=root/'assets/one-take'
+        self.back=cv2.imread(str(folder/'conservatory.webp'))
+        self.props={p.stem:sprite_asset(folder,p.stem) for p in folder.glob('*.webp') if p.stem!='conservatory' and not p.name.startswith('.')}
+        self.glass=Fracture(self.props['plate'])
+        angle=np.arctan2(yy,xx)
+        radius=np.hypot(xx,yy)
+        rim=np.exp(-((radius-(.65+.055*np.sin(18*angle)))/.15)**2)
+        rays=(.72+.28*np.cos(24*angle))**3
+        self.caustic=np.zeros((72,160,4),np.uint8)
+        self.caustic[:,:,3]=np.uint8(62*rim*rays)
+        for channel,value in enumerate((227,157,244)):
+            self.caustic[:,:,channel]=self.caustic[:,:,3].astype(float)*value/255
+        self.dust=np.random.default_rng(210).random((98,4))
 
+    def frame(self,t,W,H):
+        lens=Lens(t,W,H)
+        # Map the conservatory as a fixed photographic set extension. All contact
+        # points, actors and inscriptions stay in the same coordinate system.
+        coords=np.asarray([lens.project(0,0),lens.project(1000,0),lens.project(0,700)],np.float32)
+        m=cv2.getAffineTransform(np.float32([[0,0],[1000,0],[0,700]]),coords)
+        dst=cv2.warpAffine(self.back,m,(W,H),flags=cv2.INTER_CUBIC,borderMode=cv2.BORDER_REFLECT_101)
+        a=self.props
+        def prop(name,x,base,w,z=0,angle=0,squash=1,lean=0,shadow=True):
+            if shadow:shade(dst,lens,x,base,w,z)
+            card(dst,lens,a[name],x,base,w,z,angle,squash,lean)
+        # Objects are always present, including outside the current field of view.
+        prop('reel',1090,509,103,-21,-.07)
+        prop('story',1296,589,112,8,-.05)
+        prop('why',1460,601,132,13,.02)
+        prop('claim',1618,604,100,17,-.06)
+        # The bottom of the stake is buried in the flower bed.
+        prop('visit',1775,605,145,0,-.035,.88)
+        # Flower heads grow from ground and turn slightly with the glasshouse breeze.
+        def flower(x,y,w,z,phase,growth=1):
+            if growth<.015:return
+            card(dst,lens,a['cosmos'],x,y,w*growth,z,.047*math.sin(t*.98+phase)+phase*.027,1,2.2*math.sin(t*.75+phase))
+        flower(1907,596,101,-30,-1,.50+.50*ease(38.6,44,t))
+        flower(2016,604,127,-24,1.2,.39+.61*ease(40.7,45.5,t))
+        prop('close',1958,598,150,15,-.025)
+        flower(1877,618,70,37,-3,.2+.8*ease(40.3,44.7,t))
+        flower(2045,622,79,46,1.8,.32+.68*ease(41.4,45.9,t))
 
-class Film:
-    def __init__(self,source,wide):
-        self.wide=wide
-        self.w,self.h=(1280,720) if wide else (720,1280)
-        self.images={k:load_frame(source/f"film-{k}{'-wide' if wide else ''}.webp",(self.w,self.h)) for k,_ in TIMELINE if k!='night'}
-        w,h=self.w,self.h
-        yy,xx=np.mgrid[0:h,0:w].astype(np.float32)
-        self.xy=(xx,yy)
-        self.u,self.v=xx/w,yy/h
-        scene=self.images['lift']
-        center=(.493*w,.315*h) if wide else (.490*w,.359*h)
-        axes=(.218*w,.181*h) if wide else (.413*w,.116*h)
-        self.center=center
-        mask=np.zeros((h,w),np.uint8)
-        cv2.ellipse(mask,tuple(round(v) for v in center),tuple(round(v) for v in axes),0,0,360,255,-1,cv2.LINE_AA)
-        self.plate=Cutout(scene,mask);self.table=polish_background(scene,mask)
-        self.fracture=Fracture(scene,center,axes)
-        u,v=self.u,self.v
-        self.under_glass=np.exp(-(((u-center[0]/w)/(axes[0]/w*.93))**2+((v-center[1]/h-.055)/(axes[1]/h*.75))**2)*1.7).astype(np.float32)
-        broom_poly=([(0.078,0),(.115,0),(.259,.426),(.297,.443),(.308,.510),(.362,.592),(.479,.695),(.567,.731),(.594,.773),(.551,.824),(.367,.899),(.145,.956),(.163,.803),(.200,.59),(.230,.52),(.220,.46)] if wide else
-                [(0,.18),(.014,.207),(.204,.515),(.249,.528),(.281,.586),(.348,.657),(.475,.713),(.640,.760),(.696,.783),(.642,.821),(.392,.872),(.105,.898),(0,.913),(0,.619),(.088,.558),(.091,.530),(0,.371)])
-        broom=self.images['broom'];bm=brush_matte(broom,broom_poly,True)
-        self.broom=Cutout(broom,bm);self.floor=polish_background(broom,bm)
-        points=([( .364,.042),(.393,.016),(.467,.009),(.493,.038),(.513,.079),(.508,.148),(.490,.191),(.473,.210),(.470,.248),(.435,.302),(.388,.225),(.337,.129),(.327,.110)]
-                 if wide else
-                [(.334,.051),(.371,.026),(.442,.018),(.540,.037),(.579,.066),(.623,.095),(.629,.121),(.608,.173),(.594,.190),(.546,.223),(.500,.239),(.464,.270),(.292,.209),(.281,.190)])
-        toss=self.images['toss'];tm=brush_matte(toss,points)
-        self.bucket=Cutout(toss,tm);self.doorway=polish_background(toss,tm)
-        self.spout=(.452,.182) if wide else (.568,.160)
-        self.target=(.620,.633) if wide else (.856,.568)
-        # The airborne glass is displaced inside a narrow band along its physical
-        # path; the brass inscription and architecture remain fixed in the frame.
-        sx,sy=self.spout;ex,ey=self.target
-        q=np.clip(((u-sx)*(ex-sx)+(v-sy)*(ey-sy))/((ex-sx)**2+(ey-sy)**2),0,1)
-        dist=((u-sx-q*(ex-sx))/.115)**2+((v-sy-q*(ey-sy))/.12)**2
-        self.stream=np.exp(-dist*2.1)*np.maximum(0.,np.sin(np.pi*q))**.75
-        self.along=q
-        self.rng=np.random.default_rng(38)
-        # Wide graphic shapes are never added; the closing motion acts only on
-        # real photographed petals and leaves surrounding the inscribed glass.
-        self.flower_motion=np.clip((abs(u-.50)-.13)/.26,0,1)*np.clip((.85-v)/.55,0,1)
-        self.flow_x=(np.sin(v*11+u*5)*self.flower_motion).astype(np.float32)
-        self.flow_y=((.45+.55*np.sin(u*13+v*4)**2)*self.flower_motion).astype(np.float32)
+        prop('lunch',417,572,111,0,-.06)
+        prop('frame',616,565,106,-3,.02)
+        # The carving emerges from under the rising plate, then stays on the table.
+        grow=.006+.994*ease(2.32,3.78,t)
+        if grow>.01:
+            shade(dst,lens,444,236,124*grow,0)
+            card(dst,lens,a['emblem'],444,236,121*grow,0,-.016)
+        lift=ease(.18,2.84,t)
+        if t<self.glass.release:
+            shade(dst,lens,441,237,181,0,1.28)
+            card(dst,lens,self.caustic,437-8*lift,241,193+21*lift,0,-.015,.34)
+            card(dst,lens,a['plate'],441,237-43*lift,182,0,0,1+.52*lift)
+        if t<21.1:
+            self.glass.draw(dst,lens,t)
+        else:
+            self.glass.draw(dst,lens,t,'inside')
 
-    def lift(self,t):
-        w,h=self.w,self.h
-        if t<=.004:return self.images['lift'].copy()
-        height=trajectory([(0,0),(.16,.08),(.63,1),(.78,1.04),(.86,1.0),(1,0)],t)
-        canvas=self.table.copy()
-        cast=cv2.convertScaleAbs(self.under_glass,alpha=18*height)
-        # The contact shadow stays on the table and softens as the plate clears it.
-        canvas=cv2.subtract(canvas,cv2.merge([cast,cast,cast]))
-        self.plate.place(canvas,self.center,angle=-3.9*height,stretch=(1+.015*height,1-.115*height),offset=(w*.007*height,-h*(.088 if self.wide else .061)*height))
-        return canvas
+        # Swing the broom in a shallow arc. Its bristles stay on the floor for
+        # the forward pass, then lift as the bucket and camera leave together.
+        br=ease(12.4,18.62,t)
+        backswing=math.sin(br*math.pi*5)*math.sin(br*math.pi)
+        broomx=236+643*br+backswing*17
+        broomy=563+10*br-8*max(0,-backswing)
+        prop('broom',broomx,broomy,98,-8,-.32+.14*backswing+.16*br,.98)
+        prop('spoon',801,573,127,4,-.075,.91)
+        bx,by,ang=pail_pose(t)
+        shade(dst,lens,bx,565,103,14)
+        card(dst,lens,a['pail'],bx,by,109,17,ang)
+        if t>=21.1:self.glass.draw(dst,lens,t,'flying')
+        # Only individual motes in the same shafts catch the light.
+        for xx,yy,zz,phase in self.dust:
+            x=xx*2150+4*math.sin(.76*t+phase*13)
+            y=yy*660+5*math.sin(.55*t+phase*7)
+            px,py=lens.project(x,y,(zz-.5)*160)
+            if 1<px<W-2 and 1<py<H-2:
+                v=math.sin(phase*15+t*.55)**6
+                if v>.35:
+                    ix,iy=int(px),int(py)
+                    dst[iy:iy+2,ix:ix+2]=np.minimum(255,dst[iy:iy+2,ix:ix+2].astype(float)+v*np.array([21,25,30])).astype(np.uint8)
+        return dst
 
-    def broom_pass(self,t):
-        w,h=self.w,self.h
-        stroke=trajectory([(0,-.26),(.08,-.50),(.26,.43),(.40,-.42),(.64,.71),(.76,-.17),(.97,1),(1,.91)],t)
-        floor=self.floor.copy()
-        pivot=(w*(.13 if self.wide else .03),h*(.13 if self.wide else .27))
-        self.broom.place(floor,pivot,angle=-stroke*(7.2 if self.wide else 5.8),
-                         offset=(w*stroke*.056, -h*.009*max(0,-stroke)),warp=stroke*.012)
-        return camera(floor,1.023+.022*ease(t),-.010*t,-.007*t,-.32*ease(t))
-
-    def pour(self,t):
-        w,h=self.w,self.h
-        xx,yy=self.xy;q=self.along
-        ripple=np.sin((q*2.5-t*2.75)*math.tau)*self.stream
-        x=xx-ripple*w*(.007 if self.wide else .014)
-        y=yy-ripple*h*.013
-        canvas=cv2.remap(self.doorway,x,y,cv2.INTER_LINEAR,borderMode=cv2.BORDER_REFLECT101)
-        pour=ease(t/.65);pivot=(self.spout[0]*w,self.spout[1]*h)
-        self.bucket.place(canvas,pivot,angle=lerp(-14,7.8,pour),
-                          offset=(w*(1-pour)*-.02,h*(1-pour)*.018))
-        return camera(canvas,1.012+.055*ease(t),-.026*ease(t),-.02*ease(t),-.4*ease(t),(.55,.58))
-
-    def close(self,image,t,visit=False):
-        w,h=self.w,self.h;xx,yy=self.xy
-        grow=1-ease(min(1,t*(1.4 if visit else 1.55)))
-        wind=np.sin(t*2.3+self.u*2)*.004
-        map_x=xx+(self.flow_x*grow*.035+self.flower_motion*wind)*w
-        map_y=yy-self.flow_y*(grow*.045+.0025*math.sin(t*3.5))*h
-        garden=cv2.remap(image,map_x,map_y,cv2.INTER_LINEAR,borderMode=cv2.BORDER_REFLECT101)
-        return camera(garden,1.01+.035*ease(t),.002*t,-.006*t,lerp(.34,-.15,t),(.5,.57))
-
-    def frame(self,name,t):
-        w,h=self.w,self.h
-        if name=='night':return np.zeros((h,w,3),np.uint8)
-        image=self.images[name]
-        if name=='lift':return self.lift(t)
-        if name=='shatter':
-            # Practical high-speed still is revealed behind the outward trajectories.
-            base=color_fade(self.table,image,ease(t/.42))
-            self.fracture.render(base,t)
-            shock=.007*(1-t)**3*math.sin(t*54)
-            return camera(base,1.015+.052*ease(t),shock,shock*.35,-.4*(1-t),(.50,.36))
-        if name=='broom':return self.broom_pass(t)
-        if name=='toss':return self.pour(t)
-        if name in ['close','visit']:return self.close(image,t,name=='visit')
-        # Short camera moves vary in angle and direction and stay framed on the
-        # source's own photographed lettering. There is no overlaid title track.
-        direction={'emblem':(1.08,1.018,-.013,-.022,.90,-.20),
-                   'floor':(1.022,1.057,.010,-.013,-.70,.15),
-                   'host':(1.012,1.049,-.012,-.010,.40,-.12),
-                   'story':(1.056,1.015,.011,.012,-.60,.18),
-                   'why':(1.016,1.052,-.010,-.009,.23,-.31),
-                   'claim':(1.049,1.009,.008,.010,-.30,.10)}
-        z0,z1,px,py,r0,r1=direction[name]
-        step=ease(t)
-        return camera(image,lerp(z0,z1,step),px*(step-.5),py*(step-.5),lerp(r0,r1,step))
-
-    def frames(self):
-        previous=None
-        for name,count in TIMELINE:
-            print(name,flush=True)
-            for i in range(count):
-                t=i/(count-1)
-                frame=self.frame(name,t)
-                if name not in ['lift','shatter','night'] and previous is not None:
-                    length={'emblem':7,'floor':10,'host':10,'broom':8,'toss':7,'visit':19,'close':15}.get(name,9)
-                    if i<length:frame=color_fade(previous,frame,ease((i+1)/length))
-                if name=='claim' and i>=count-8:
-                    frame=cv2.convertScaleAbs(frame,alpha=1-ease((i-(count-8))/7))
-                yield frame
-            previous=frame
-
-
-def encode(source,output,wide):
-    width,height=(1280,720) if wide else (720,1280)
-    film=Film(source,wide)
-    output.parent.mkdir(parents=True,exist_ok=True)
-    temp=output.with_name(output.stem+'.rendering.mp4')
-    cmd=['ffmpeg','-hide_banner','-loglevel','error','-y','-f','rawvideo','-pixel_format','bgr24','-video_size',f'{width}x{height}','-framerate','24','-i','-','-an','-vf','scale=out_color_matrix=bt709:out_range=tv,format=yuv420p','-c:v','libx264','-threads','3','-preset','fast','-crf','21','-maxrate','1650k','-bufsize','3000k','-g','12','-keyint_min','12','-sc_threshold','0','-color_primaries','bt709','-color_trc','bt709','-colorspace','bt709','-movflags','+faststart',str(temp)]
-    proc=subprocess.Popen(cmd,stdin=subprocess.PIPE)
+def render(args):
+    stage=Set(args.root)
+    wide=args.format=='wide'
+    W,H=(1280,720) if wide else (720,1280)
+    directory=args.root/'assets/film'
+    if args.proof:
+        sample=[.3,2.6,3.05,4.6,6.55,8.6,11.9,15.4,17.2,20.9,22.65,26.4,30.5,35,39.4,45.2]
+        thumbs=[cv2.resize(stage.frame(t,W,H),(240,135) if wide else (135,240),interpolation=cv2.INTER_AREA) for t in sample]
+        cv2.imwrite(str(args.proof),cv2.vconcat([cv2.hconcat(thumbs[i:i+4]) for i in range(0,len(thumbs),4)]))
+        return
+    output=directory/('free-lunch-'+args.format+'.mp4')
+    rate,buffer=('3100k','4650k') if wide else ('2250k','3375k')
+    proc=subprocess.Popen(['ffmpeg','-loglevel','error','-y','-f','rawvideo','-pixel_format','bgr24','-video_size',f'{W}x{H}','-framerate',str(FPS),'-i','pipe:0','-an','-c:v','libx264','-threads','4','-preset','medium','-crf','21','-maxrate',rate,'-bufsize',buffer,'-pix_fmt','yuv420p','-g','24','-keyint_min','24','-sc_threshold','0','-movflags','+faststart',str(output)],stdin=subprocess.PIPE)
+    posters={round(t*FPS):name for name,t in POSTERS.items()}
     try:
-        for frame in film.frames():
-            proc.stdin.write(memoryview(np.ascontiguousarray(frame)).cast('B'))
+        for n in range(DURATION*FPS):
+            frame=stage.frame(n/FPS,W,H)
+            proc.stdin.write(frame.tobytes())
+            if n in posters:
+                suffix='-wide' if wide else ''
+                cv2.imwrite(str(directory/('film-'+posters[n]+suffix+'.webp')),frame,[cv2.IMWRITE_WEBP_QUALITY,88])
+    finally:
         proc.stdin.close()
-        if proc.wait()!=0:raise RuntimeError('ffmpeg encode failed')
-        temp.replace(output)
-    except BaseException:
-        if proc.stdin and not proc.stdin.closed:proc.stdin.close()
-        proc.wait()
-        if temp.exists():temp.unlink()
-        raise
-    print(f'{output} ({output.stat().st_size:,} bytes)',flush=True)
-
-
-def main():
-    p=argparse.ArgumentParser(description=__doc__,formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument('--input',type=Path,required=True,help='Directory containing film-SHOT.webp and film-SHOT-wide.webp')
-    p.add_argument('--portrait',type=Path,help='720×1280 output')
-    p.add_argument('--wide',type=Path,help='1280×720 output')
-    args=p.parse_args()
-    if not(args.portrait or args.wide):p.error('choose at least one output')
-    if args.portrait and args.wide and args.portrait.resolve()==args.wide.resolve():p.error('choose different output paths')
-    if not shutil.which('ffmpeg'):p.error('ffmpeg must be available on PATH')
-    cv2.setNumThreads(2)
-    for dest,wide in [(args.portrait,False),(args.wide,True)]:
-        if dest:encode(args.input,dest,wide)
-
+        if proc.wait():raise RuntimeError('ffmpeg did not complete the encode')
+    print(output)
 
 if __name__=='__main__':
-    main()
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--format',choices=['portrait','wide'],required=True)
+    parser.add_argument('--root',type=Path,default=ROOT)
+    parser.add_argument('--proof',type=Path)
+    render(parser.parse_args())

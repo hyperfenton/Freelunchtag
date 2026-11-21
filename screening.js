@@ -1,172 +1,173 @@
-// The two edits share the same timecode. The browser displays original photography
-// from the movie even when video decode, autoplay, or motion is unavailable.
-const byId = id => document.getElementById(id);
-const root = document.documentElement;
-const cinema = byId('cinema');
-const film = byId('storyFilm');
-const still = byId('stillFrame');
-const photo = still.querySelector('img');
-const widePhoto = still.querySelector('source');
-const object = byId('filmObject');
-const nextButton = byId('continueFilm');
-const options = byId('filmOptions');
-const details = byId('sceneDialog');
-const content = byId('sceneContent');
-const title = byId('sceneTitle');
-const quick = byId('quickTag');
-const wide = matchMedia('(min-aspect-ratio: 1/1)');
-const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-const album = 'assets/film/';
-const chapters = [
-  {id:'hero',start:0,end:6,still:'lift',label:'Replay the plate lifting and breaking'},
-  {id:'lunch',start:6,end:10,still:'floor',label:'Read the lunch invitation'},
-  {id:'hosts',start:10,end:14,still:'host',label:'Meet your lunch host'},
-  {id:'how',start:14,end:20,still:'broom',label:'Read how the tag works'},
-  {id:'video',start:20,end:24,still:'toss',label:'Watch the original 26-second explainer'},
-  {id:'story',start:24,end:28,still:'story',label:'Read where Free Lunch Tag started'},
-  {id:'why',start:28,end:32,still:'why',label:'Read why Meadows buys lunch'},
-  {id:'claim',start:32,end:36,still:'claim',label:'Enter your tag'},
-  {id:'bonus',start:37,end:41,still:'visit',label:'View Meadows visiting times'},
-  {id:'made-with-love',start:41,end:46,still:'close',label:'Read the closing credit'}
+// One native movie clock drives both the visible take and its interaction targets.
+const byId=id=>document.getElementById(id);
+const root=document.documentElement, cinema=byId('cinema'), film=byId('storyFilm');
+const still=byId('stillFrame'), photo=still.querySelector('img'), widePhoto=still.querySelector('source');
+const object=byId('filmObject'), nextButton=byId('continueFilm'), options=byId('filmOptions');
+const details=byId('sceneDialog'), content=byId('sceneContent'), title=byId('sceneTitle');
+const quick=byId('quickTag');
+const wide=matchMedia('(min-aspect-ratio: 1/1)'), reduce=matchMedia('(prefers-reduced-motion: reduce)');
+const album='assets/film/', revision='?v=one-take-1';
+const chapters=[
+  {id:'hero',start:0,read:0,still:'lift',label:'Replay the plate lifting and breaking'},
+  {id:'lunch',start:6.8,read:8.65,still:'floor',label:'Read the lunch invitation'},
+  {id:'hosts',start:10.4,read:11.95,still:'host',label:'Meet your lunch host'},
+  {id:'how',start:14.1,read:16.9,still:'broom',label:'Read how the tag works'},
+  {id:'video',start:19.7,read:21.6,still:'toss',label:'Watch the original 26-second explainer'},
+  {id:'story',start:24,read:26.45,still:'story',label:'Read where Free Lunch Tag started'},
+  {id:'why',start:28.45,read:30.5,still:'why',label:'Read why Meadows buys lunch'},
+  {id:'claim',start:32.55,read:35,still:'claim',label:'Enter your tag'},
+  {id:'bonus',start:37.2,read:39.56,still:'visit',label:'View Meadows visiting times'},
+  {id:'made-with-love',start:41.55,read:45.25,still:'close',label:'Read the closing credit'}
 ];
-const clamp = (x,a,b) => Math.min(b,Math.max(a,x));
-let selected=0, displayed=-1, boundaries=[], positions=[];
-let whole=false, frame=0, settleTimer=0, pendingTime=0, sourceName='', savedY=0;
-let modalWasOpen=false, videoReady=false, frozen=false, ignoreScroll=false, held=false;
-let relocated=null;
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const dialogOpen=()=>Boolean(document.querySelector('dialog[open]'));
 const motionOff=()=>reduce.matches||root.dataset.motion==='off'||navigator.connection?.saveData===true;
-function showPoster(index,photoName=chapters[index].still){
-  const ambient=album+'film-'+photoName+(wide.matches?'-wide':'')+'.webp';
-  cinema.style.setProperty('--surround','url("'+ambient+'")');
-  if(still.dataset.shot===photoName)return;
-  still.dataset.shot=photoName;
-  widePhoto.srcset=album+'film-'+photoName+'-wide.webp';
-  photo.src=album+'film-'+photoName+'.webp';
+let selected=-1, positions=[], pageY=-1, target=null, tick=0, lastStep=0, touchUntil=0;
+let sourceName='', savedTime=0, ready=false, unavailable=false, wasOpen=false;
+let relocated=null;
+function sceneAt(t){
+  return Math.max(0,chapters.findLastIndex(ch=>t>=ch.start));
 }
-function setScene(index){
-  selected=index;
-  if(index===displayed)return;
-  displayed=index;
-  cinema.dataset.scene=chapters[index].id;
-  object.setAttribute('aria-label',chapters[index].label);
+function showPoster(i){
+  const name=chapters[i].still;
+  if(still.dataset.shot!==name){
+    still.dataset.shot=name;
+    widePhoto.srcset=album+'film-'+name+'-wide.webp'+revision;
+    photo.src=album+'film-'+name+'.webp'+revision;
+  }
+}
+function setScene(i){
+  if(selected===i)return;
+  selected=i;
+  cinema.dataset.scene=chapters[i].id;
+  object.setAttribute('aria-label',chapters[i].label);
   object.hidden=false;
-  nextButton.classList.toggle('at-end',index===chapters.length-1);
-  nextButton.setAttribute('aria-label',index===chapters.length-1?'Return to the opening':'Scroll to the next scene');
-  showPoster(index);
+  nextButton.classList.toggle('at-end',i===chapters.length-1);
+  nextButton.setAttribute('aria-label',i===chapters.length-1?'Replay the film':'Move to the next part of the film');
 }
 function measure(){
-  const h=innerHeight,max=Math.max(1,document.documentElement.scrollHeight-h);
-  positions=chapters.map(ch=>{const r=byId(ch.id).getBoundingClientRect();return clamp(r.top+scrollY+(r.height-h)/2,0,max);});
+  const max=Math.max(1,root.scrollHeight-innerHeight);
+  positions=chapters.map(ch=>{
+    const r=byId(ch.id).getBoundingClientRect();
+    return clamp(scrollY+r.top+(r.height-innerHeight)/2,0,max);
+  });
   positions[0]=0;
-  boundaries=positions.map((at,i)=>i===0?0:(at+positions[i-1])/2);
-  boundaries.push(max+1);
 }
-function indexAtScroll(y){
-  let i=0;
-  while(i<chapters.length-1 && y>=boundaries[i+1])i++;
-  return i;
+function interpolate(value,xs,ys){
+  if(value<=xs[0])return ys[0];
+  const i=xs.findIndex(x=>x>value);
+  if(i<1)return ys.at(-1);
+  return ys[i-1]+(ys[i]-ys[i-1])*(value-xs[i-1])/(xs[i]-xs[i-1]);
 }
-function indexAtTime(t){
-  let i=0;
-  while(i<chapters.length-1 && t>=chapters[i+1].start)i++;
-  return i;
+const times=chapters.map(ch=>ch.read);
+function alignTo(value){
+  pageY=Math.round(value);
+  if(Math.abs(scrollY-pageY)>1)scrollTo({top:pageY,behavior:'instant'});
 }
-function applyStill(){
+function showingPosters(){return motionOff()||unavailable;}
+function staticAt(t){
+  const i=sceneAt(t);
+  savedTime=t;setScene(i);showPoster(i);
   cinema.classList.remove('on-film');
-  if(motionOff())film.pause();
 }
 function chooseFile(){
-  if(motionOff()){applyStill();return;}
-  const name=album+(wide.matches?'free-lunch-wide.mp4':'free-lunch-portrait.mp4');
+  if(motionOff())return;
+  const name=album+(wide.matches?'free-lunch-wide.mp4':'free-lunch-portrait.mp4')+revision;
   if(name===sourceName)return;
-  sourceName=name;videoReady=false;cinema.classList.remove('on-film');
-  pendingTime=chapters[selected].start;
+  if(ready)savedTime=film.currentTime;
+  sourceName=name;ready=false;unavailable=false;
   film.src=name;film.load();
 }
-function seek(time){
-  pendingTime=time;
-  if(!videoReady)return;
-  const target=clamp(time,0,Math.max(0,film.duration-.055));
-  if(Math.abs(film.currentTime-target)>.06){
-    try{film.currentTime=target;}catch{/* Metadata or seekable ranges are still arriving. */}
-  }
-}
 function play(){
-  if(!videoReady||dialogOpen()||document.hidden||motionOff()||frozen||held)return;
-  film.play().catch(()=>{if(film.readyState<2)applyStill();});
-}
-function reveal(){
-  if(!motionOff()&&film.readyState>=2&&!film.error)cinema.classList.add('on-film');
-}
-function onVideoFrame(){
-  if(!film.paused && !whole && film.currentTime>=chapters[selected].end-.12){
-    film.pause();
-    // Leave the inscription on screen until the reader advances.
-    if(selected===0)showPoster(0,'emblem');
-  }else if(whole){
-    setScene(indexAtTime(film.currentTime));
-    if(film.ended)whole=false;
+  if(ready&&!showingPosters()&&!document.hidden&&!dialogOpen()&&film.paused&&!film.ended){
+    film.play().catch(()=>{
+      if(film.readyState<2||document.hidden||dialogOpen()||!film.paused)return;
+      if(target===null){unavailable=true;staticAt(film.currentTime);}
+    });
   }
-  if('requestVideoFrameCallback' in film)film.requestVideoFrameCallback(onVideoFrame);
 }
-if('requestVideoFrameCallback' in film)film.requestVideoFrameCallback(onVideoFrame);
-else film.addEventListener('timeupdate',onVideoFrame);
-film.addEventListener('loadedmetadata',()=>{videoReady=true;seek(pendingTime);play();});
-film.addEventListener('loadeddata',reveal);
-film.addEventListener('seeked',reveal);
-film.addEventListener('playing',reveal);
-film.addEventListener('error',()=>{videoReady=false;applyStill();});
-film.addEventListener('ended',()=>{whole=false;});
-function scrollUpdate(){
-  frame=0;
-  if(ignoreScroll||dialogOpen())return;
-  const y=scrollY,i=indexAtScroll(y),ch=chapters[i];
-  held=true;whole=false;frozen=false;film.pause();
-  setScene(i);
-  // Interpolate through the recorded cut, including the brief black beat before the garden.
-  const starts=boundaries[i],ends=boundaries[i+1];
-  const fraction=clamp((y-starts)/Math.max(1,ends-starts),0,1);
-  const time=ch.start+fraction*((i===7?37:ch.end)-ch.start-.10);
-  if(motionOff()){showPoster(i);applyStill();}
-  else {chooseFile();seek(time);}
-  clearTimeout(settleTimer);
-  settleTimer=setTimeout(()=>{held=false;play();},115);
+function again(){if(!tick&&!document.hidden&&!dialogOpen()&&!showingPosters())tick=requestAnimationFrame(advance);}
+function advance(now){
+  tick=0;
+  if(!ready||dialogOpen()||document.hidden||showingPosters())return;
+  let t=film.currentTime;
+  if(target!==null){
+    const delta=target-t;
+    if(Math.abs(delta)<.13){target=null;film.playbackRate=1;play();}
+    else if(delta>0){
+      // Forward navigation plays the intervening footage on the original decoder.
+      film.playbackRate=clamp(1+delta*.65,1.05,3.5);play();
+    }else{
+      film.pause();
+      // Browsers lack reverse playback. Walk backwards through nearby frames
+      // instead of replacing the picture with a distant chapter or a poster.
+      if(!film.seeking&&now-lastStep>30){
+        const step=clamp((now-lastStep)/1000*2.9,.045,.13);
+        film.currentTime=Math.max(target,t-step);lastStep=now;
+      }
+    }
+  }else{
+    savedTime=t;film.playbackRate=1;
+    if(now>touchUntil)alignTo(interpolate(t,times,positions));
+  }
+  setScene(sceneAt(t));
+  if(!film.ended||target!==null)again();
 }
-function onScroll(){if(!ignoreScroll&&!dialogOpen()&&!frame)frame=requestAnimationFrame(scrollUpdate);}
-addEventListener('scroll',onScroll,{passive:true});
-function align(index){
-  ignoreScroll=true;
-  scrollTo({top:positions[index],behavior:'instant'});
-  requestAnimationFrame(()=>{ignoreScroll=false;});
+function travel(t){
+  savedTime=clamp(t,0,45.95);
+  if(showingPosters()){staticAt(savedTime);return;}
+  chooseFile();target=savedTime;lastStep=performance.now();again();
 }
-function go(index,keepFilm=false){
-  clearTimeout(settleTimer);held=false;whole=keepFilm;frozen=false;
-  align(index);setScene(index);
-  if(motionOff()){applyStill();return;}
-  chooseFile();seek(chapters[index].start+.02);play();
+function restart(){
+  // A direct user gesture can start the decoder after mobile autoplay is denied.
+  if(ready&&!film.error&&!motionOff())unavailable=false;
+  target=null;savedTime=0;alignTo(0);setScene(0);
+  if(showingPosters()){staticAt(0);return;}
+  if(ready){film.currentTime=0;film.playbackRate=1;play();again();}
+}
+function requestChapter(i){
+  alignTo(positions[i]);
+  if(i===0){restart();return;}
+  travel(chapters[i].read);
 }
 function closeMenu(){options.open=false;}
-nextButton.addEventListener('click',()=>go((selected+1)%chapters.length));
-byId('watchFilm').addEventListener('click',()=>{
-  closeMenu();
-  if(motionOff())return;
-  go(0,true);
+addEventListener('scroll',()=>{
+  if(dialogOpen()||Math.abs(scrollY-pageY)<=1)return;
+  pageY=-1;touchUntil=performance.now()+450;
+  travel(interpolate(scrollY,positions,times));
+},{passive:true});
+for(const type of ['touchstart','touchmove','wheel'])addEventListener(type,()=>{touchUntil=performance.now()+450;},{passive:true});
+film.addEventListener('loadedmetadata',()=>{
+  ready=true;
+  if(savedTime>.05)film.currentTime=clamp(savedTime,0,Math.max(0,film.duration-.06));
+  play();again();
 });
+function reveal(){if(!showingPosters()&&film.readyState>=2)cinema.classList.add('on-film');}
+for(const name of ['playing','loadeddata','seeked'])film.addEventListener(name,reveal);
+film.addEventListener('ended',()=>{setScene(chapters.length-1);alignTo(positions.at(-1));});
+film.addEventListener('error',()=>{unavailable=true;ready=false;staticAt(savedTime);});
+nextButton.addEventListener('click',()=>requestChapter((selected+1)%chapters.length));
+byId('watchFilm').addEventListener('click',()=>{closeMenu();restart();});
 function updateMotion(){
   byId('watchFilm').disabled=motionOff();
-  if(motionOff()){whole=false;applyStill();showPoster(selected);}
-  else if(!dialogOpen()){chooseFile();seek(chapters[selected].start);held=false;play();}
+  if(motionOff()){
+    if(ready)savedTime=film.currentTime;
+    target=null;film.pause();
+    const freeze=ready&&cinema.classList.contains('on-film')&&!reduce.matches&&navigator.connection?.saveData!==true;
+    if(freeze)setScene(sceneAt(savedTime));
+    else staticAt(savedTime);
+  }else{
+    chooseFile();
+    if(ready&&!unavailable){
+      if(Math.abs(film.currentTime-savedTime)>.1)film.currentTime=savedTime;
+      reveal();play();again();
+    }
+  }
 }
 new MutationObserver(updateMotion).observe(root,{attributes:true,attributeFilter:['data-motion']});
 reduce.addEventListener('change',updateMotion);
-wide.addEventListener('change',()=>{measure();showPoster(selected);chooseFile();});
-let lastWidth=innerWidth,lastHeight=innerHeight;
-addEventListener('resize',()=>{
-  const largeChange=Math.abs(lastWidth-innerWidth)>5||Math.abs(lastHeight-innerHeight)>100;
-  lastWidth=innerWidth;lastHeight=innerHeight;measure();
-  if(largeChange&&!dialogOpen()&&!whole){setScene(indexAtScroll(scrollY));chooseFile();}
-});
+wide.addEventListener('change',()=>{measure();chooseFile();});
+addEventListener('resize',measure);
 function moveHere(node){
   if(!node)return;
   const slot=document.createComment('scene detail in original page flow');
@@ -202,8 +203,7 @@ function sceneDetails(){
 }
 byId('readScene').addEventListener('click',sceneDetails);
 object.addEventListener('click',()=>{
-  if(whole)align(selected);
-  if(selected===0){go(0);return;}
+  if(selected===0){restart();return;}
   sceneDetails();
 });
 byId('closeScene').addEventListener('click',()=>details.close());
@@ -217,29 +217,22 @@ details.addEventListener('close',()=>{
 });
 function watchDialogs(){
   const open=dialogOpen();
-  if(open&&!modalWasOpen){savedY=scrollY;film.pause();}
-  if(!open&&modalWasOpen){
-    chooseFile();
-    if(Math.abs(scrollY-savedY)>1){
-      ignoreScroll=true;scrollTo({top:savedY,behavior:'instant'});requestAnimationFrame(()=>ignoreScroll=false);
-    }
-    if(whole||film.currentTime<chapters[selected].end-.14)play();
-  }
-  modalWasOpen=open;
+  if(open&&!wasOpen)film.pause();
+  if(!open&&wasOpen){play();again();}
+  wasOpen=open;
 }
 for(const d of document.querySelectorAll('dialog'))new MutationObserver(watchDialogs).observe(d,{attributes:true,attributeFilter:['open']});
-document.addEventListener('visibilitychange',()=>{if(document.hidden)film.pause();else if(whole||film.currentTime<chapters[selected].end-.14)play();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)film.pause();else{play();again();}});
 document.querySelectorAll('a[href="#claim"]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();quick.click();}));
 function followHash(){
-  if(location.hash==='#claim'){setScene(7);quick.click();}
-  else {
-    const index=chapters.findIndex(ch=>ch.id===location.hash.slice(1));
-    if(index>=0)go(index);
-  }
+  if(location.hash==='#claim'){quick.click();return;}
+  const i=chapters.findIndex(ch=>ch.id===location.hash.slice(1));
+  if(i>=0)requestChapter(i);
 }
 addEventListener('hashchange',followHash);
 root.classList.add('projecting');
 measure();
-setScene(indexAtScroll(scrollY));
+savedTime=interpolate(scrollY,positions,times);
+setScene(sceneAt(savedTime));showPoster(selected);
 if(location.hash)followHash();
 updateMotion();

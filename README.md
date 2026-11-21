@@ -6,11 +6,11 @@ Existing public website: https://freelunchtag.com . Hosted on GitHub Pages; no C
 
 ## The mobile-first site
 
-The homepage plays a self-hosted 46-second photographic film. Portrait and landscape have separate camera compositions. ImageGen supplied the practical lettering and the photographic keyframes. The page displays the printed words from the frames. The original sections, links, and a readable transcript remain in `index.html`.
+The homepage plays a self-hosted 46-second photographic film. Both aspect ratios use one continuous camera path through a photographic conservatory. The camera follows the pieces of a single tessellated plate from the dining table, along the floor, through a broom sweep and pail toss into the flower bed. ImageGen supplied the set and isolated practical props. The inscriptions are photographed into the props. The original sections, links, and a readable transcript remain in `index.html`.
 
-`screening.js` maps the original section order to film timecodes. Scrolling moves the playhead. Film options include continuous playback, the current scene's text and the three collectible models. A side tag opens the live invitation form at any point. A printed QR opens its host as soon as the contact is decrypted. Reduced-motion and video-limited devices use the matching photographic stills.
+`screening.js` maps the original section order to film timecodes. Normal playback runs the entire take. Scrolling travels through the recording. Film options include replay, the current scene's text and the three collectible models. A side tag opens the live invitation form at any point. A printed QR opens its host as soon as the contact is decrypted. Reduced-motion and video-limited devices use the matching photographic stills.
 
-Both MP4s and the source photographs live in `assets/film/`. The film plays without an external generation service or API key. Use `python3 scripts/render-film.py --help` for the offline render options. Run `node --test scripts/page-flow.test.mjs` to check the original page order, QR entry, media distribution and lookup wiring.
+Both MP4s and their actual frame grabs live in `assets/film/`. The conservatory and transparent prop textures live in `assets/one-take/`. The film plays without an external generation service or API key. Use `python3 scripts/render-film.py --help` for the offline render options. After rendering both framings, run `python3 scripts/check-film.py` to decode every frame and flag empty frames or abrupt changes. Run `node --test scripts/page-flow.test.mjs` to check the original page order, QR entry, media distribution and lookup wiring.
 
 ## Expansion plan for eight hosts and 80 physical tags
 
