@@ -14,8 +14,8 @@ if (location.hash.startsWith('#tag=')) {
 <meta name="description" content="Someone at Meadows Baptist Church wants to buy you lunch. Scan your Free Lunch Tag or enter its code to meet your host and pick a time together.">
 <meta name="theme-color" content="#120d25">
 <link rel="canonical" href="https://freelunchtag.com/"><link rel="icon" href="LOGO.PNG"><link rel="apple-touch-icon" href="LOGO.PNG"><link rel="manifest" href="manifest.json">
-<meta property="og:type" content="website"><meta property="og:url" content="https://freelunchtag.com/"><meta property="og:title" content="Free Lunch Tag · Lunch is on us."><meta property="og:description" content="A little tag. A real invitation to lunch with someone from Meadows in Plano."><meta property="og:image" content="https://freelunchtag.com/assets/film/film-lift-wide.webp?v=one-take-1"><meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="screening.css?v=flowering-1">
+<meta property="og:type" content="website"><meta property="og:url" content="https://freelunchtag.com/"><meta property="og:title" content="Free Lunch Tag · Lunch is on us."><meta property="og:description" content="A little tag. A real invitation to lunch with someone from Meadows in Plano."><meta property="og:image" content="https://freelunchtag.com/assets/film/film-lift-wide.webp?v=journey-1"><meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="screening.css?v=journey-1">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="assets/collection/barlow-condensed-extrabold.woff2">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Free Lunch Tag","url":"https://freelunchtag.com/","description":"Collectible invitations to a free meal with a Meadows host in Plano, Texas.","publisher":{"@type":"Organization","name":"Meadows Baptist Church","url":"https://www.meadowsbaptist.org"}}</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-GGHV06ZDYR"></script>
@@ -23,13 +23,13 @@ if (location.hash.startsWith('#tag=')) {
 </head>
 <body>
 <div id="cinema" aria-hidden="true">
-  <picture id="stillFrame"><source media="(min-aspect-ratio: 1/1)" srcset="assets/film/film-lift-wide.webp?v=one-take-1"><img src="assets/film/film-lift.webp?v=one-take-1" alt="" fetchpriority="high"></picture>
+  <picture id="stillFrame"><source media="(min-aspect-ratio: 1/1)" srcset="assets/film/film-lift-wide.webp?v=journey-1"><img src="assets/film/film-lift.webp?v=journey-1" alt="" fetchpriority="high"></picture>
   <video id="storyFilm" muted playsinline preload="none" disablepictureinpicture tabindex="-1"></video>
 </div>
 <header class="film-tools">
   <details id="filmOptions"><summary aria-label="Film options" title="Film options"><span aria-hidden="true">···</span></summary>
     <div class="tool-list">
-      <button type="button" id="watchFilm">Replay the film</button>
+      <button type="button" id="watchFilm">Watch as a film</button>
       <button type="button" id="inspectTag" aria-haspopup="dialog">Explore the three tags</button>
       <button type="button" id="readScene" aria-haspopup="dialog">Read this scene</button>
       <button type="button" id="motionToggle" aria-pressed="false">Pause motion</button>
@@ -91,7 +91,7 @@ if (location.hash.startsWith('#tag=')) {
 </footer>
 <button type="button" id="quickTag" aria-label="Enter your tag" aria-haspopup="dialog"><img src="assets/collection/classic.webp" width="35" height="48" alt=""><span>My tag</span></button>
 <button type="button" id="filmObject" hidden></button>
-<button type="button" id="continueFilm" aria-label="Scroll to the next scene"><span aria-hidden="true">⌄</span></button>
+<button type="button" id="continueFilm" aria-label="Scroll to the next scene"><span id="scrollCue">Scroll to follow the glass</span><span class="scroll-arrow" aria-hidden="true">↓</span></button>
 <dialog id="quickLookup" aria-label="Your Free Lunch Tag"><div class="lookup-frame"><button type="button" class="dismiss" id="closeLookup">Back to film</button><div id="lookupMount"></div></div></dialog>
 <dialog id="sceneDialog" aria-labelledby="sceneTitle"><div class="detail-frame"><button type="button" class="dismiss" id="closeScene">Back to film</button><h2 id="sceneTitle"></h2><div id="sceneContent"></div></div></dialog>
 <dialog id="collectorDialog" aria-labelledby="galleryTitle"><div class="modal-inner"><div class="gallery-header"><h2 id="galleryTitle">The first <em>three.</em></h2><button type="button" id="closeGallery" autofocus>Close</button></div><div id="galleryMount"><div id="collection" class="display" data-edition="classic">
@@ -109,5 +109,5 @@ if (location.hash.startsWith('#tag=')) {
 <script type="module" src="pilot.js?v=one-take-1"></script>
 <script type="module" src="collection.js?v=one-take-1"></script>
 <script type="module" src="tag-viewer.js?v=one-take-1"></script>
-<script type="module" src="screening.js?v=flowering-1"></script>
+<script type="module" src="screening.js?v=journey-1"></script>
 </body></html>

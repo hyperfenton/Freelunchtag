@@ -35,3 +35,21 @@ test('the side tag and printed QR use a single invitation form',()=>{
   assert.equal([...page.matchAll(/id="codeForm"/g)].length,1);
   assert.match(page,/id="made-with-love"[\s\S]*?Made with love<br><em>by Meadows/);
 });
+
+test('scroll distance and film time round-trip at chapter boundaries and in between',async()=>{
+  const {chapters, lastFrame, makeRoute, mapValue, sceneAt}=await import('../scroll-route.mjs');
+  const tops=chapters.map((_,i)=>i*1000), end=tops.at(-1)+700;
+  const route=makeRoute(tops,end);
+  assert.deepEqual(route[0],[0,0]);assert.deepEqual(route.at(-1),[end,lastFrame]);
+  for(let i=1;i<route.length;i++){
+    assert.ok(route[i][0]>route[i-1][0] && route[i][1]>route[i-1][1]);
+  }
+  for(let y=0;y<=end;y+=13){
+    assert.ok(Math.abs(mapValue(route,mapValue(route,y),true)-y)<1e-7);
+  }
+  for(const [i,ch] of chapters.entries()){
+    assert.equal(sceneAt(ch.read),i);
+    assert.equal(mapValue(route,tops[i]),ch.start);
+  }
+  assert.equal(mapValue(route,-150),0);assert.equal(mapValue(route,end+150),lastFrame);
+});

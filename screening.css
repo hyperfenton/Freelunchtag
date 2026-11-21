@@ -15,10 +15,10 @@ html.projecting{background:#0e0a17;color:#fffbf7}
 #storyFilm{opacity:0;pointer-events:none}#cinema.on-film #storyFilm{opacity:1}
 @media(max-aspect-ratio:9/19){#cinema img,#storyFilm{object-fit:contain;background:#0e0b18}}
 @media(min-aspect-ratio:21/9){#cinema img,#storyFilm{object-fit:contain}}
-.projecting main>section,.projecting .closing{position:relative;height:100svh;min-height:480px;padding:0;pointer-events:none}
-.projecting main>#hero{height:118svh}.projecting main>#how{height:135svh}
+.projecting main>section,.projecting .closing{position:relative;height:var(--travel,100svh);min-height:480px;padding:0;pointer-events:none}
+
 .projecting main>section>.frame,.projecting .closing p,.projecting .credits{position:absolute!important;clip-path:inset(50%);overflow:hidden;width:1px;height:1px;margin:-1px;padding:0;white-space:normal}
-.projecting footer{padding:0}.projecting .closing{width:100%;height:100svh}
+.projecting footer{padding:0}.projecting .closing{width:100%;height:var(--travel,230svh)}
 .projecting .film-tools{display:block;position:fixed;right:max(13px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));z-index:5;color:#fff}
 .film-tools details{position:relative}.film-tools summary{list-style:none;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#100e229e;color:#fff9ff;font:700 1.4rem/1 system-ui;border:1px solid #fff6;user-select:none}
 .film-tools summary::-webkit-details-marker{display:none}.tool-list{position:absolute;top:48px;right:0;display:grid;min-width:190px;border-radius:12px;border:1px solid #e1d9f680;padding:6px;background:#201b32f5;box-shadow:0 12px 24px #0e082a55}
@@ -28,8 +28,8 @@ html.projecting{background:#0e0a17;color:#fffbf7}
 #quickTag img{height:32px;width:23px;object-fit:contain;transform:rotate(-12deg)}#quickTag span{font:600 .67rem/1.35 system-ui;letter-spacing:.01em}
 .projecting #filmObject{display:block;position:fixed;left:10%;top:20%;width:80%;height:59%;z-index:1;border:0;background:transparent;color:transparent;touch-action:pan-y;cursor:pointer}
 .projecting #filmObject:focus-visible{outline:2px solid #d8d0f7;outline-offset:-2px;border-radius:12px}
-.projecting #continueFilm{display:grid;place-items:center;position:fixed;z-index:3;bottom:max(8px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:46px;height:40px;border:0;background:#16102167;color:white;border-radius:50%;text-shadow:0 1px 6px #17111f;font:400 1.65rem/1 system-ui}
-#continueFilm span{translate:0 -4px}#continueFilm.at-end span{rotate:180deg;translate:0 4px}
+.projecting #continueFilm{display:flex;align-items:center;gap:9px;position:fixed;z-index:3;bottom:max(14px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);min-width:42px;min-height:42px;padding:4px 12px;border:1px solid #ffead850;border-radius:24px;background:#211a1ea6;color:#fff7e9;font:500 .79rem/1.1 system-ui;white-space:nowrap}
+#continueFilm .scroll-arrow{margin:auto;font-size:1.05rem}#continueFilm.at-end .scroll-arrow{transform:rotate(180deg)}
 dialog{padding:0;color:var(--ink);background:var(--paper);border:1px solid #b9adc8;border-radius:17px;max-width:94vw;max-height:88dvh;width:min(590px,93vw);overflow:auto;box-shadow:0 22px 85px #08041499}
 dialog::backdrop{background:#100b1bbf;backdrop-filter:blur(4px)}body:has(dialog[open]){overflow:hidden}
 .lookup-frame,.detail-frame{padding:clamp(20px,4.5vw,38px)}
@@ -65,7 +65,7 @@ dialog::backdrop{background:#100b1bbf;backdrop-filter:blur(4px)}body:has(dialog[
 @media(min-aspect-ratio:1/1) and (max-aspect-ratio:7/5){#cinema img,#storyFilm{object-fit:contain}}
 
 @media(max-aspect-ratio:1/1){
-  .projecting body:has(#cinema[data-scene="made-with-love"]) #quickTag{top:72%}
+  .projecting #quickTag{top:73%}
 }
 @media(max-aspect-ratio:1/1) and (prefers-reduced-motion:no-preference){
   .projecting:not([data-motion="off"]) #quickTag{transition:top .65s ease-in-out}
