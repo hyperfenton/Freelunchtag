@@ -63,3 +63,10 @@ dialog::backdrop{background:#100b1bbf;backdrop-filter:blur(4px)}body:has(dialog[
 /* Keep the optical frame edge to edge on phones, with a matte on unusually wide or square screens. */
 @media(min-aspect-ratio: 2/5) and (max-aspect-ratio: 9/19){#cinema img,#storyFilm{object-fit:cover}}
 @media(min-aspect-ratio:1/1) and (max-aspect-ratio:7/5){#cinema img,#storyFilm{object-fit:contain}}
+
+@media(max-aspect-ratio:1/1){
+  .projecting body:has(#cinema[data-scene="made-with-love"]) #quickTag{top:72%}
+}
+@media(max-aspect-ratio:1/1) and (prefers-reduced-motion:no-preference){
+  .projecting:not([data-motion="off"]) #quickTag{transition:top .65s ease-in-out}
+}

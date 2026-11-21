@@ -6,7 +6,7 @@ const object=byId('filmObject'), nextButton=byId('continueFilm'), options=byId('
 const details=byId('sceneDialog'), content=byId('sceneContent'), title=byId('sceneTitle');
 const quick=byId('quickTag');
 const wide=matchMedia('(min-aspect-ratio: 1/1)'), reduce=matchMedia('(prefers-reduced-motion: reduce)');
-const album='assets/film/', revision='?v=one-take-1';
+const album='assets/film/', revision='?v=flowering-1';
 const chapters=[
   {id:'hero',start:0,read:0,still:'lift',label:'Replay the plate lifting and breaking'},
   {id:'lunch',start:6.8,read:8.65,still:'floor',label:'Read the lunch invitation'},
@@ -17,7 +17,7 @@ const chapters=[
   {id:'why',start:28.45,read:30.5,still:'why',label:'Read why Meadows buys lunch'},
   {id:'claim',start:32.55,read:35,still:'claim',label:'Enter your tag'},
   {id:'bonus',start:37.2,read:39.56,still:'visit',label:'View Meadows visiting times'},
-  {id:'made-with-love',start:41.55,read:45.25,still:'close',label:'Read the closing credit'}
+  {id:'made-with-love',start:41.55,read:46.8,still:'close',label:'Read the Meadows message in the flowers'}
 ];
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const dialogOpen=()=>Boolean(document.querySelector('dialog[open]'));
@@ -114,7 +114,7 @@ function advance(now){
   if(!film.ended||target!==null)again();
 }
 function travel(t){
-  savedTime=clamp(t,0,45.95);
+  savedTime=clamp(t,0,times.at(-1));
   if(showingPosters()){staticAt(savedTime);return;}
   chooseFile();target=savedTime;lastStep=performance.now();again();
 }

@@ -6,7 +6,7 @@ Existing public website: https://freelunchtag.com . Hosted on GitHub Pages; no C
 
 ## The mobile-first site
 
-The homepage plays a self-hosted 46-second photographic film. Both aspect ratios use one continuous camera path through a photographic conservatory. The camera follows the pieces of a single tessellated plate from the dining table, along the floor, through a broom sweep and pail toss into the flower bed. ImageGen supplied the set and isolated practical props. The inscriptions are photographed into the props. The original sections, links, and a readable transcript remain in `index.html`.
+The homepage plays a self-hosted 48-second photographic film. Both aspect ratios use one continuous camera path through a photographic conservatory. The camera follows the pieces of a single tessellated plate from the dining table, along the floor, through a broom sweep and pail toss into the flower bed. Stems grow from the moss, then clusters of ivory flowers open to spell “Made with love by Meadows.” ImageGen supplied the set and isolated practical props. The inscriptions are photographed into the props. The original sections, links, and a readable transcript remain in `index.html`.
 
 `screening.js` maps the original section order to film timecodes. Normal playback runs the entire take. Scrolling travels through the recording. Film options include replay, the current scene's text and the three collectible models. A side tag opens the live invitation form at any point. A printed QR opens its host as soon as the contact is decrypted. Reduced-motion and video-limited devices use the matching photographic stills.
 

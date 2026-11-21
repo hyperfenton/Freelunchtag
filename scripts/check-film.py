@@ -29,5 +29,5 @@ for framing, size in [('portrait',(720,1280)), ('wide',(1280,720))]:
         previous = hist
         count += 1
     cap.release()
-    assert count == 46*24, f'{framing} has {count} decoded frames'
+    assert count == 48*24, f'{framing} has {count} decoded frames'
     print(f'{framing}: checked all {count} frames')
