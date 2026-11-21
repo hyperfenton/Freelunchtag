@@ -45,3 +45,27 @@ stage.addEventListener('pointerup', e => {
 stage.addEventListener('pointercancel',()=>{down=null;resetTilt();});
 stage.addEventListener('pointerleave',()=>{down=null;resetTilt();});
 for(const a of document.querySelectorAll('a[href="#claim"]'))a.addEventListener('click',()=>{if(document.getElementById('step-0').classList.contains('active'))document.getElementById('tagNumber').focus({preventScroll:true});});
+
+const expand = document.getElementById('inspectTag');
+const dialog = document.getElementById('collectorDialog');
+const mount = document.getElementById('galleryMount');
+const placeholder = document.createComment('collectible display position');
+panel.before(placeholder);
+expand.addEventListener('click',()=>{
+  mount.append(panel);
+  dialog.showModal();
+  document.getElementById('closeGallery').focus();
+});
+document.getElementById('closeGallery').addEventListener('click',()=>dialog.close());
+dialog.addEventListener('close',()=>{placeholder.after(panel);expand.focus({preventScroll:true});});
+dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
+new MutationObserver(()=>{
+  const back=panel.classList.contains('flipped');
+  stage.setAttribute('aria-label',editions[panel.dataset.edition][0]+(back?', back of the collectible tag':', front of the collectible tag'));
+}).observe(panel,{attributes:true,attributeFilter:['class','data-edition']});
+for(const button of panel.querySelectorAll('[data-choice]')){
+  button.addEventListener('click',()=>{
+    const label=panel.querySelector('.display-details');label.classList.remove('graphic-pop');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>label.classList.add('graphic-pop')));
+  });
+}

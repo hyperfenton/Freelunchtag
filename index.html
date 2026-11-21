@@ -15,8 +15,8 @@ if (location.hash.startsWith('#tag=')) {
 <meta name="theme-color" content="#f9f5ee">
 <link rel="canonical" href="https://freelunchtag.com/"><link rel="icon" href="LOGO.PNG"><link rel="apple-touch-icon" href="LOGO.PNG"><link rel="manifest" href="manifest.json">
 <meta property="og:type" content="website"><meta property="og:url" content="https://freelunchtag.com/"><meta property="og:title" content="Free Lunch Tag · Lunch is on us."><meta property="og:description" content="A little tag. A real invitation to lunch with someone from Meadows in Plano."><meta property="og:image" content="https://freelunchtag.com/assets/collection/the-first-three.jpg"><meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="collection.css?v=first-three-1">
-<link rel="preload" as="image" href="assets/collection/classic.webp">
+<link rel="stylesheet" href="collection.css?v=counter-2">
+<link rel="stylesheet" href="diner.css?v=counter-2"><link rel="preload" as="image" href="assets/collection/counter-world.webp">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="assets/collection/barlow-condensed-extrabold.woff2">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Free Lunch Tag","url":"https://freelunchtag.com/","description":"Collectible invitations to a free meal with a Meadows host in Plano, Texas.","publisher":{"@type":"Organization","name":"Meadows Baptist Church","url":"https://www.meadowsbaptist.org"}}</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-GGHV06ZDYR"></script>
@@ -30,18 +30,18 @@ if (location.hash.startsWith('#tag=')) {
 <a class="header-cta" href="#claim">I have a tag <span aria-hidden="true">↗</span></a>
 </div></header>
 <main>
-<section class="hero wrap" aria-label="Your lunch invitation">
+<div class="cover"><section class="hero wrap" aria-label="Your lunch invitation">
 <div class="invitation" id="claim">
 <div id="step-0" class="claim-step active">
 <p class="local"><span></span> MEADOWS BAPTIST CHURCH <i></i> PLANO, TX</p>
-<h1>Lunch is<br><em>on us<span>.</span></em></h1>
-<p class="intro">Someone wants to buy you lunch. Scan the back of your tag or enter its code to meet your host.</p>
+<h1>You’re<br><em>tagged<span>!</span></em></h1>
+<div class="guest-check"><p class="intro"><strong>Lunch is on us.</strong> Scan your tag or enter its code to meet the person buying you lunch.</p>
 <form id="codeForm" novalidate>
 <label for="tagNumber">Your tag code</label>
 <div class="code-row"><input id="tagNumber" placeholder="XXXX-XXXX-XXXX" required maxlength="16" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-describedby="tagError"><button type="submit" class="btn-submit">Find my host <span aria-hidden="true">→</span></button></div>
 <p class="error hidden" role="alert" id="tagError"></p>
 </form>
-<p class="promise"><b aria-hidden="true">✓</b> A free meal. No sign-up. Church attendance is optional.</p>
+<p class="promise"><b aria-hidden="true">✓</b> A free meal. No sign-up. Church attendance is optional.</p></div>
 </div>
 <div id="step-1" class="claim-step result" aria-labelledby="resultHeading">
 <p class="local"><span></span> YOUR LUNCH HOST</p>
@@ -56,16 +56,17 @@ if (location.hash.startsWith('#tag=')) {
 </div>
 <div class="display" id="collection" data-edition="classic">
 <div class="display-head"><span>THE FIRST THREE</span><span class="edition-count" aria-hidden="true">01 / 03</span></div>
-<div class="stage" id="stage" aria-label="Interactive collectible tag">
+<button id="inspectTag" class="inspect" type="button" aria-haspopup="dialog" aria-label="Enlarge the collectible tag" title="Enlarge the collectible tag">⤢</button>
+<div class="stage" id="stage" role="img" aria-label="Classic Lightning, front of the collectible tag">
 <div class="orbit orbit-a" aria-hidden="true"></div><div class="orbit orbit-b" aria-hidden="true"></div><div class="ground" aria-hidden="true"></div>
 <div class="tilt" id="tilt"><div class="model" id="model"><div class="metal" aria-hidden="true"></div><div class="tag-body"><div class="edge e1"></div><div class="edge e2"></div><div class="edge e3"></div><img class="tag-face" id="frontArt" src="assets/collection/classic.webp" alt="Classic Lightning tag with a golden bolt and Free Lunch lettering" width="480" height="720"><img class="tag-back" src="assets/collection/back.webp" alt="" width="480" height="720"></div></div></div>
 </div>
 <div class="display-details"><div><small>COLLECTIBLE TAG</small><strong id="editionName" aria-live="polite">Classic Lightning</strong></div><button type="button" id="flipTag" aria-pressed="false"><span aria-hidden="true">⟳</span> <span id="flipLabel">Flip tag</span></button></div>
 <div class="selector" role="group" aria-label="Choose collectible"><button data-choice="classic" aria-pressed="true"><i></i>Classic</button><button data-choice="taco" aria-pressed="false"><i></i>Taco</button><button data-choice="pizza" aria-pressed="false"><i></i>Pizza</button></div>
 </div>
-</section>
+</section></div>
 <section class="how" id="how"><div class="wrap">
-<div class="section-head"><h2>How it works<span>.</span></h2><a href="#video">Watch the 26-second film <span aria-hidden="true">↘</span></a></div>
+<div class="section-head"><h2>From tag to table<span>.</span></h2><a href="#video">Watch the 26-second film <span aria-hidden="true">↘</span></a></div>
 <div class="steps"><article><span>01 / SCAN</span><h3>Meet your host.</h3><p>Scan your tag or enter the code on the back. You’ll see who invited you and how to reach them.</p></article><article><span>02 / TEXT</span><h3>Pick a spot.</h3><p>Send your host a text. Choose a time and a public place in Plano that works for you both.</p></article><article><span>03 / LUNCH</span><h3>Eat together.</h3><p>Your host picks up the tab. Enjoy the conversation and keep your tag as a reminder of who you met.</p></article></div>
 </div></section>
 <section class="keeper wrap" aria-labelledby="keep-title"><img src="assets/collection/the-first-three.jpg" width="1380" height="920" loading="lazy" alt="The Classic Lightning, Taco and Pizza collectible keychains side by side"><div><h2 id="keep-title">Yours to keep<span>.</span></h2><p>Classic Lightning, Taco, or Pizza. Each design comes with its own invitation to lunch. After you meet, the tag is yours to keep or trade. Its code still connects to the original host.</p></div></section>
@@ -77,6 +78,8 @@ if (location.hash.startsWith('#tag=')) {
 <div class="partners"><a href="https://www.meadowsbaptist.org">Meadows Baptist Church ↗</a><a href="https://www.hyperfenton.com">Hyper Fenton ↗</a></div></div>
 <figure id="video"><video controls playsinline preload="none" poster="assets/free-lunch-explainer-poster.jpg" aria-label="Free Lunch Tag, how it works"><source src="assets/free-lunch-explainer.mp4" type="video/mp4"><track default kind="captions" src="assets/free-lunch-explainer.vtt" srclang="en" label="English"><a href="assets/free-lunch-explainer.mp4">Watch the explainer</a></video><figcaption>Free Lunch Tag <span>0:26</span></figcaption></figure></div></section>
 </main>
+<dialog id="collectorDialog" aria-labelledby="galleryTitle"><div class="gallery-header"><h2 id="galleryTitle">The first three.</h2><button id="closeGallery" type="button" autofocus>Close ×</button></div><div id="galleryMount"></div></dialog>
 <footer class="wrap" id="bonus"><div><strong>FREE LUNCH TAG</strong><p>Come say hello at Meadows if you’d like.<br>Wednesday at 6 p.m. or Sunday at 9:30 a.m.</p></div><div class="footer-links"><a href="#claim">Enter a tag ↑</a><a href="admin.html">Host tools ↗</a></div></footer>
-<script type="module" src="pilot.js?v=collection-1"></script><script type="module" src="collection.js?v=first-three-1"></script>
+<script type="module" src="pilot.js?v=collection-1"></script><script type="module" src="collection.js?v=counter-2"></script>
+<script type="module" src="tag-viewer.js?v=counter-2"></script>
 </body></html>
