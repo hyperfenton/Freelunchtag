@@ -23,30 +23,18 @@ function savePreference(key, value) {
   try { localStorage.setItem(key, value); } catch { /* Preferences are optional. */ }
 }
 
-function setTheme(value) {
-  root.dataset.theme = value === 'dark' ? 'dark' : 'light';
-  const action = root.dataset.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
-  byId('themeToggle').setAttribute('aria-label', action);
-  byId('themeToggle').title = action;
-}
-setTheme(readPreference('lunch-theme') || 'light');
-byId('themeToggle').addEventListener('click', () => {
-  setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark');
-  savePreference('lunch-theme', root.dataset.theme);
-});
-
 function setMotion() {
   const paused = systemMotion.matches || readPreference('lunch-pause') === 'yes';
   root.dataset.motion = paused ? 'off' : 'on';
   const control = byId('motionToggle');
   control.disabled = systemMotion.matches;
-  control.firstElementChild.textContent = paused ? '▷' : 'Ⅱ';
+  control.textContent = paused ? 'Resume motion' : 'Pause motion';
   const label = systemMotion.matches ? 'Reduced motion enabled on this device' : paused ? 'Resume animation' : 'Pause animation';
   control.title = label;
   control.setAttribute('aria-label', label);
   control.setAttribute('aria-pressed', String(paused));
   stage.dispatchEvent(new Event('motionchange'));
-  requestScrollFrame();
+
 }
 byId('motionToggle').addEventListener('click', () => {
   savePreference('lunch-pause', root.dataset.motion === 'on' ? 'yes' : 'no');
@@ -113,6 +101,7 @@ panel.querySelectorAll('[data-choice]').forEach((button, index) => {
 });
 function galleryClose() { dialog.close(); }
 expand.addEventListener('click', () => {
+  byId('filmOptions').open=false;
 
   neighborButtons = [-1, 1].map(step => {
     const button = document.createElement('button');
@@ -129,7 +118,7 @@ expand.addEventListener('click', () => {
   dialog.showModal();
 
   byId('closeGallery').focus();
-  requestScrollFrame();
+
 });
 dialog.addEventListener('keydown', event => {
   if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
@@ -144,75 +133,11 @@ dialog.addEventListener('close', () => {
   neighborButtons.forEach(({ button }) => button.remove());
   neighborButtons = [];
 
-  expand.focus({ preventScroll: true });
-  requestScrollFrame();
+  byId('filmOptions').querySelector('summary').focus({preventScroll:true});
+
 });
 
-// Native anchors and scrolling remain available with motion paused or graphics disabled.
-document.querySelectorAll('a[href="#claim"]').forEach(link => {
-  link.addEventListener('click', event => {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    if (location.hash !== '#claim') history.pushState(null, '', '#claim');
-    byId('claim').scrollIntoView({behavior:'instant'});
-    const target = byId('step-0').classList.contains('active') ? byId('tagNumber') : byId('resultHeading');
-    target.focus({ preventScroll: true });
-  });
-});
-const hero = byId('hero');
-const demo = document.querySelector('.demonstration');
-const rows = [...document.querySelectorAll('[data-beat]')];
-const compact = matchMedia('(max-width: 680px)');
-let frame = 0;
-let howVisible = false;
-function requestScrollFrame() {
-  if (!frame) frame = requestAnimationFrame(updateScroll);
-}
-function updateScroll() {
-  frame = 0;
-  document.body.classList.toggle('past-opening', hero.getBoundingClientRect().bottom < innerHeight * .42);
-  if (howVisible) {
-    const guide = innerHeight * (compact.matches ? .59 : .44);
-    const current = rows.reduce((choice, row) => row.getBoundingClientRect().top < guide ? row : choice, rows[0]);
-    demo.dataset.moment = current.dataset.beat;
-  }
-}
-const observer = new IntersectionObserver(entries => {
-  for (const entry of entries) {
-    if (entry.target === byId('how')) howVisible = entry.isIntersecting;
-
-  }
-  requestScrollFrame();
-});
-observer.observe(byId('how'));
-const arrivals = new IntersectionObserver(entries => {
-  for (const entry of entries) {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('arrived');
-      arrivals.unobserve(entry.target);
-    }
-  }
-}, { threshold: .12 });
-document.querySelectorAll('main > .section').forEach(section => arrivals.observe(section));
-addEventListener('scroll', requestScrollFrame, { passive:true });
-addEventListener('resize', requestScrollFrame);
 setMotion();
-stage.addEventListener('pointermove', event => {
-  if (root.dataset.motion === 'off' || event.pointerType !== 'mouse') return;
-  const bounds = stage.getBoundingClientRect();
-  const x = (event.clientX - bounds.left) / bounds.width;
-  const y = (event.clientY - bounds.top) / bounds.height;
-  stage.style.setProperty('--glint-x', (x * 100).toFixed(1) + '%');
-  stage.style.setProperty('--glint-y', (y * 100).toFixed(1) + '%');
-  stage.style.setProperty('--glint', '.65');
-  stage.style.setProperty('--table-x', ((x - .5) * -12).toFixed(1) + 'px');
-  stage.style.setProperty('--tilt-y', ((x - .5) * 55 - 10).toFixed(1) + 'deg');
-  stage.style.setProperty('--tilt-x', ((.5 - y) * 28).toFixed(1) + 'deg');
-});
-stage.addEventListener('pointerleave', () => {
-  for (const name of ['--glint', '--table-x', '--tilt-y', '--tilt-x']) stage.style.removeProperty(name);
-});
-
 // The side tag carries the same lookup as the printed QR. Keep the viewer's place on the floor.
 const quickTrigger = byId('quickTag');
 const lookupDialog = byId('quickLookup');
@@ -220,6 +145,8 @@ const ticket = document.querySelector('.ticket');
 const ticketHome = document.createComment('invitation lookup position');
 ticket.before(ticketHome);
 quickTrigger.addEventListener('click', () => {
+  if(lookupDialog.open)return;
+  byId('filmOptions').open=false;
   byId('lookupMount').append(ticket);
   lookupDialog.showModal();
   const focusTarget = byId('step-1').classList.contains('active') ? byId('resultHeading') : byId('tagNumber');
@@ -228,6 +155,7 @@ quickTrigger.addEventListener('click', () => {
 byId('closeLookup').addEventListener('click', () => lookupDialog.close());
 lookupDialog.addEventListener('close', () => {
   ticketHome.after(ticket);
+  if(location.hash==='#claim' && document.documentElement.classList.contains('projecting')) document.getElementById('cinema').dataset.returned='true';
   quickTrigger.focus({preventScroll:true});
 });
 lookupDialog.addEventListener('click', e => {

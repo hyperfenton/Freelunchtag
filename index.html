@@ -12,37 +12,29 @@ if (location.hash.startsWith('#tag=')) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Free Lunch Tag · Lunch is on us in Plano, TX</title>
 <meta name="description" content="Someone at Meadows Baptist Church wants to buy you lunch. Scan your Free Lunch Tag or enter its code to meet your host and pick a time together.">
-<meta name="theme-color" content="#272085">
+<meta name="theme-color" content="#120d25">
 <link rel="canonical" href="https://freelunchtag.com/"><link rel="icon" href="LOGO.PNG"><link rel="apple-touch-icon" href="LOGO.PNG"><link rel="manifest" href="manifest.json">
-<meta property="og:type" content="website"><meta property="og:url" content="https://freelunchtag.com/"><meta property="og:title" content="Free Lunch Tag · Lunch is on us."><meta property="og:description" content="A little tag. A real invitation to lunch with someone from Meadows in Plano."><meta property="og:image" content="https://freelunchtag.com/assets/collection/the-first-three.jpg"><meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="table.css?v=scene-print-1">
+<meta property="og:type" content="website"><meta property="og:url" content="https://freelunchtag.com/"><meta property="og:title" content="Free Lunch Tag · Lunch is on us."><meta property="og:description" content="A little tag. A real invitation to lunch with someone from Meadows in Plano."><meta property="og:image" content="https://freelunchtag.com/assets/film/film-lift-wide.webp"><meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="screening.css?v=photo-v1">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="assets/collection/barlow-condensed-extrabold.woff2">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Free Lunch Tag","url":"https://freelunchtag.com/","description":"Collectible invitations to a free meal with a Meadows host in Plano, Texas.","publisher":{"@type":"Organization","name":"Meadows Baptist Church","url":"https://www.meadowsbaptist.org"}}</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-GGHV06ZDYR"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-GGHV06ZDYR');</script>
 </head>
 <body>
-<div class="world" aria-hidden="true">
-  <div class="world-still"></div>
-  <canvas id="worldCanvas"></canvas>
-  <div class="floor-setting"></div>
-  <div class="garden-setting"></div>
-  <div class="bloom-setting"></div>
-  <div class="fallback-logo"><img src="LOGO.PNG" width="300" height="300" alt=""></div>
-  <div class="world-shade"></div>
-  <canvas id="typeCanvas"></canvas>
-  <canvas id="fragmentCanvas"></canvas>
-  <canvas id="propCanvas"></canvas>
-  <div class="night"></div>
+<div id="cinema" aria-hidden="true">
+  <picture id="stillFrame"><source media="(min-aspect-ratio: 1/1)" srcset="assets/film/film-lift-wide.webp"><img src="assets/film/film-lift.webp" alt="" fetchpriority="high"></picture>
+  <video id="storyFilm" muted playsinline preload="none" disablepictureinpicture tabindex="-1"></video>
 </div>
-<div class="reading-line" aria-hidden="true"></div>
-<a class="skip" href="#claim">Skip to tag lookup</a>
-<header class="topbar">
-  <div class="frame topbar-inner">
-    <a class="brand" href="#hero" aria-label="Free Lunch Tag home"><img src="LOGO.PNG" width="44" height="44" alt="">Free Lunch Tag</a>
-    <nav aria-label="Main navigation"><a href="#hosts">Meet the hosts</a><a href="#how">How it works</a><a href="#story">Our story</a></nav>
-    <div class="utilities"><button id="inspectTag" class="open-collection" type="button" aria-haspopup="dialog">The tags</button><button type="button" id="themeToggle" aria-label="Switch to dark theme" title="Switch theme">◐</button><button type="button" id="motionToggle" aria-pressed="false" aria-label="Pause animation" title="Pause animation"><span aria-hidden="true">Ⅱ</span></button></div>
-  </div>
+<header class="film-tools">
+  <details id="filmOptions"><summary aria-label="Film options" title="Film options"><span aria-hidden="true">···</span></summary>
+    <div class="tool-list">
+      <button type="button" id="watchFilm">Play the whole film</button>
+      <button type="button" id="inspectTag" aria-haspopup="dialog">Explore the three tags</button>
+      <button type="button" id="readScene" aria-haspopup="dialog">Read this scene</button>
+      <button type="button" id="motionToggle" aria-pressed="false">Pause motion</button>
+    </div>
+  </details>
 </header>
 <main>
   <section id="hero" class="hero" aria-labelledby="hero-title">
@@ -53,7 +45,6 @@ if (location.hash.startsWith('#tag=')) {
         <p class="lede">Someone handed you a tag because they want to buy you lunch and get to know you.</p>
         <div class="actions"><a class="button pearl" href="#claim">I have a tag</a><a class="text-link" href="#how">How it works</a></div>
       </div>
-      <button type="button" id="plateStage" class="plate-trigger" aria-label="Replay the glass plate opening"><span class="glass-cue">Replay the opening</span></button>
     </div>
   </section>
   <section id="lunch" class="lunch section" aria-labelledby="lunch-title">
@@ -96,10 +87,14 @@ if (location.hash.startsWith('#tag=')) {
   <div class="nightfall" aria-hidden="true"></div>
   <section id="bonus" class="bonus section" aria-labelledby="bonus-title"><div class="frame host-layout"><div><p class="credit">Come say hello</p><h2 id="bonus-title">Bring your tag<br><em>to Meadows.</em></h2></div><div class="prose"><p>After lunch, bring your tag to Meadows Baptist Church if you’d like to visit. We’d love to meet you.</p><dl class="times"><div><dt>Wednesday</dt><dd>6:00 p.m.</dd></div><div><dt>Sunday</dt><dd>9:30 a.m.</dd></div></dl><a class="text-link" href="https://www.meadowsbaptist.org">Visit Meadows Baptist Church</a></div></div></section>
 </main>
-<footer><div class="closing" id="made-with-love"><p>Made with love<br><em>by Meadows.</em></p></div><div class="frame footer-inner"><a class="brand" href="#hero"><img width="42" height="42" loading="lazy" src="LOGO.PNG" alt="">Free Lunch Tag</a><a href="https://www.meadowsbaptist.org">Meadows Baptist Church · Plano, TX</a><a href="admin.html">Host tools</a></div></footer>
-<button type="button" id="quickTag" aria-label="Enter your tag at any time" aria-haspopup="dialog"><img src="LOGO.PNG" width="34" height="34" alt=""><span>My tag</span></button>
-<dialog id="quickLookup" aria-label="Your Free Lunch Tag"><div class="lookup-frame"><button type="button" id="closeLookup">Back to the film</button><div id="lookupMount"></div></div></dialog>
-<nav class="quick-nav" aria-label="Quick navigation"><a href="#claim">My tag</a><a href="#how">How it works</a><a href="#why">Why?</a></nav>
+<footer><div class="closing" id="made-with-love"><p>Made with love<br><em>by Meadows.</em></p></div>
+  <div class="credits"><a href="https://www.meadowsbaptist.org">Meadows Baptist Church, Plano</a> · <a href="admin.html">Host tools</a></div>
+</footer>
+<button type="button" id="quickTag" aria-label="Enter your tag" aria-haspopup="dialog"><img src="assets/collection/classic.webp" width="35" height="48" alt=""><span>My tag</span></button>
+<button type="button" id="filmObject" hidden></button>
+<button type="button" id="continueFilm" aria-label="Scroll to the next scene"><span aria-hidden="true">⌄</span></button>
+<dialog id="quickLookup" aria-label="Your Free Lunch Tag"><div class="lookup-frame"><button type="button" class="dismiss" id="closeLookup">Back to film</button><div id="lookupMount"></div></div></dialog>
+<dialog id="sceneDialog" aria-labelledby="sceneTitle"><div class="detail-frame"><button type="button" class="dismiss" id="closeScene">Back to film</button><h2 id="sceneTitle"></h2><div id="sceneContent"></div></div></dialog>
 <dialog id="collectorDialog" aria-labelledby="galleryTitle"><div class="modal-inner"><div class="gallery-header"><h2 id="galleryTitle">The first <em>three.</em></h2><button type="button" id="closeGallery" autofocus>Close</button></div><div id="galleryMount"><div id="collection" class="display" data-edition="classic">
         <div class="scene" id="stage" role="button" tabindex="0" aria-description="Press Enter to flip the tag. Drag horizontally to turn it in 3D." aria-label="Classic Lightning, front of the collectible tag">
           <div class="tabletop" aria-hidden="true"></div>
@@ -112,6 +107,8 @@ if (location.hash.startsWith('#tag=')) {
           <div class="selector" role="group" aria-label="Choose your collectible"><button type="button" data-choice="classic" aria-pressed="true">Classic</button><button type="button" data-choice="taco" aria-pressed="false">Taco</button><button type="button" data-choice="pizza" aria-pressed="false">Pizza</button></div>
         </div>
       </div></div></div></dialog>
-<script type="module" src="pilot.js?v=scene-print-1"></script><script type="module" src="collection.js?v=scene-print-1"></script><script type="module" src="tag-viewer.js?v=scene-print-1"></script>
-<script type="module" src="table-journey.js?v=scene-print-1"></script>
+<script type="module" src="pilot.js?v=photo-v1"></script>
+<script type="module" src="collection.js?v=photo-v1"></script>
+<script type="module" src="tag-viewer.js?v=photo-v1"></script>
+<script type="module" src="screening.js?v=photo-v1"></script>
 </body></html>

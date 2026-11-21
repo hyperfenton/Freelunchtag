@@ -2,7 +2,18 @@ import {normalizeCode,lookupId,open} from './card-crypto.mjs';
 let hosts=[],cards=[],loaded=false,loading,failures=0,lockUntil=0,requestVersion=0;
 const $=id=>document.getElementById(id);
 const safePhoto=url=>typeof url==='string' && (/^hosts\/[a-z0-9-]+\.(jpg|png|webp)$/i.test(url)||/^https:\/\//.test(url))?url:'';
-window.scrollToSection=id=>{if(id==='claim'&&$('quickLookup')?.open)return;$(id)?.scrollIntoView({behavior:'instant'});};
+window.scrollToSection=id=>{
+  if(id==='claim' && document.documentElement.classList.contains('projecting')){
+    if($('quickLookup').open)return;
+    const showLookup=()=>$('quickTag').click();
+    if($('sceneDialog').open){
+      $('sceneDialog').addEventListener('close',showLookup,{once:true});
+      $('sceneDialog').close();
+    }else showLookup();
+    return;
+  }
+  $(id)?.scrollIntoView({behavior:'instant'});
+};
 window.addEventListener('hashchange',()=>{
   if(!location.hash.startsWith('#tag='))return;
   const token=location.hash.slice(5);
