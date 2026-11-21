@@ -1,1 +1,75 @@
-{"version":1,"cards":[]}
+{
+  "version": 1,
+  "cards": [
+    {
+      "hostId": "seth",
+      "ref": "SE-P01",
+      "status": "active",
+      "contactReady": true,
+      "locks": {
+        "qr": {
+          "id": "167a2d4fba08bafd95a3de0bbd83fb86173acbc9a1d175977383fb0d63c9e259",
+          "salt": "HKVAKdDZGX7JNy9B/e/VmA==",
+          "iv": "Css7PflDa15aN334",
+          "data": "5YPjkevJtQqtf+AHuxgTs1v4LKy2mgZLgaQMu6jDMUKMlt9XUA3x9TuMHdMreCn/IoHyqHxjmjXL2ZTPCfdjddbsXwUhqQ=="
+        },
+        "code": {
+          "id": "baf10e7477ae55b4dd07842f1a6791efda7baeedb7f978a7b5bfa029e68dfa34",
+          "salt": "b6NKe56xSyBHs6oYCwiV5A==",
+          "iv": "hqaZEmHP3QneH5nM",
+          "data": "Jc+tEEEwbql8k08UXoO8IZbSmpcJF2HUVZLybPGWv6EBuCLm2+MwKWDDiXj0HY3x2ZK9f2MEXGw6Rnl1eNhimAoiAB66OQ=="
+        }
+      },
+      "scheduledFor": "",
+      "completedAt": "",
+      "updatedAt": "2026-11-21T19:48:25.411Z"
+    },
+    {
+      "hostId": "seth",
+      "ref": "SE-P02",
+      "status": "active",
+      "contactReady": true,
+      "locks": {
+        "qr": {
+          "id": "a5d0e2350097e8e859e32b824f882f76695a71b3be904177158678534b120427",
+          "salt": "Yoc+jVYg/NJhPG7eaJAl4Q==",
+          "iv": "u0/kiPGvcmSkn7E+",
+          "data": "A3GWAxtGzjp4y6xwf8X9cc1WL009MSnjlgJZLxvcAHjaueT6v7SuMb9ImUen8Wm1hwrEVIXbD/eHoANoxrZdUmksjGfF2w=="
+        },
+        "code": {
+          "id": "d6b2aae2448a32503f74e04338f7a5db6830425cacce474a937f60e19f5dc920",
+          "salt": "vm5LIKXDLTqwH7kTkKV/ow==",
+          "iv": "1RJNDitBa8k+GHeP",
+          "data": "xWkOAugwMMsKT8PakGVbrFScl9D/ZSY7KU6p/PsVBxJZFOirHqpnZ9GKr6p82RNhCjymXHkzXSxAjaGB0LV2huSuAr94JA=="
+        }
+      },
+      "scheduledFor": "",
+      "completedAt": "",
+      "updatedAt": "2026-11-21T19:48:25.411Z"
+    },
+    {
+      "hostId": "seth",
+      "ref": "SE-P03",
+      "status": "active",
+      "contactReady": true,
+      "locks": {
+        "qr": {
+          "id": "d0340f4dc5e6ed20a9022c9a11a5be66e3179c923197fb9445864443b0658125",
+          "salt": "lQhA7Fnab6Liieex4r7G/w==",
+          "iv": "4ZxnNjhwSqa//+VP",
+          "data": "VF/tiycd+5D7JTfE8unYhjKHMsEQtf/YT6IFuZzEYetuOwrbki0zn3vzw+uvug5Xlud6MAuJ5PYivl8Qda6tMONzVt50jw=="
+        },
+        "code": {
+          "id": "ea28e0755f589fb295d4f88ebdfadedaf8b38d2dd0541604a85bb2d3840e3d38",
+          "salt": "hvi2KBBusPVDansHHaVgRQ==",
+          "iv": "njULY6mAOxS3mfqR",
+          "data": "xIxagQM5iYFwj+Xn+j6SUIAW4+rVxE0m0eezersC5k4WG2MdcZYfjW6V3m52QX578XOs5YhlF2v1bq9TcEIzdBGWP71dQQ=="
+        }
+      },
+      "scheduledFor": "",
+      "completedAt": "",
+      "updatedAt": "2026-11-21T19:48:25.411Z"
+    }
+  ],
+  "updatedAt": "2026-11-21T19:48:25.411Z"
+}

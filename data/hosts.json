@@ -1,1 +1,10 @@
-{"hosts":[]}
+{
+  "hosts": [
+    {
+      "id": "seth",
+      "firstName": "Seth",
+      "bio": "Hi, I’m Seth. I’m a pastor at Meadows in Plano. I’d love to buy you lunch and hear your story.",
+      "photo": "hosts/seth.jpg"
+    }
+  ]
+}
