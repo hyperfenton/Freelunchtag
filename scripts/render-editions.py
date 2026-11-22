@@ -80,6 +80,11 @@ def export(edition,framing):
                 scale=min(width/w,height/h)
                 if hold is not None:
                     scale*=1-.008*math.sin(math.pi*hold/(HOLD-1))**2
+                    if edition=='pass-the-salsa' and i==1:
+                        # The new opening has a slightly tighter lens than the ticket take.
+                        # Match its framing at the join, then ease back while the ticket holds.
+                        magnification=.0105 if portrait else .0045
+                        scale/=1+magnification*(1-ease(hold/(HOLD-1)))
                 crop_width,crop_height=round(scale*w),round(scale*h)
                 left,top=(width-crop_width)//2,(height-crop_height)//2
                 view=cv2.resize(frame[top:top+crop_height,left:left+crop_width],(w,h),

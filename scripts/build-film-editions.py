@@ -17,10 +17,11 @@ EDITIONS = {
         'alt': 'A pizza box opens to reveal “Pull up a chair.”'
     },
     'pass-the-salsa': {
-        'name': 'Pass the Salsa', 'color': '#fff4d8', 'cue': 'Follow the lime',
-        'title': 'Pass the<br><em>salsa.</em>',
-        'description': 'Follow a lime from the taco window to a neighborhood picnic table. Meet your Meadows host, make a lunch plan and pick a question for the table.',
-        'alt': 'A kraft bag at a taco stand reads “Pass the Salsa. Your Meadows host buys lunch.”'
+        'name': 'Someone gave you a tag', 'path': 'your-tag', 'color': '#fff4d8',
+        'page_title': 'Someone gave you a Free Lunch Tag', 'cue': 'See how lunch works', 'revision': '2',
+        'title': 'Someone gave you a <em>Free Lunch Tag.</em>',
+        'description': 'Someone gave you a Free Lunch Tag. Your Meadows host buys lunch. Scan the tag or enter its code to meet your host and make a plan.',
+        'alt': 'A Classic Lightning keychain clips to a bag at the taco window. The bag reads “Someone gave you a Free Lunch Tag. Your Meadows host buys lunch.”'
     }
 }
 
@@ -28,20 +29,23 @@ def build():
     page=(ROOT/'index.html').read_text()
     for cut,settings in EDITIONS.items():
         name=settings['name']
+        path=settings.get('path',cut)
+        page_title=settings.get('page_title',f'{name} · Free Lunch Tag')
+        revision=settings.get('revision','1')
         description=settings['description']
         html=page.replace('<html lang="en">',f'<html lang="en" data-film="{cut}">')
-        html=html.replace('Free Lunch Tag · Lunch is on us in Plano, TX', f'{name} · Free Lunch Tag')
-        html=html.replace('Free Lunch Tag · Lunch is on us.',f'{name} · Free Lunch Tag')
+        html=html.replace('Free Lunch Tag · Lunch is on us in Plano, TX', page_title)
+        html=html.replace('Free Lunch Tag · Lunch is on us.',page_title)
         html=html.replace('Someone at Meadows Baptist Church wants to buy you lunch. Scan your Free Lunch Tag or enter its code to meet your host and pick a time together.',description)
         html=html.replace('A little tag. A real invitation to lunch with someone from Meadows in Plano.',description)
-        html=html.replace('https://freelunchtag.com/"','https://freelunchtag.com/'+cut+'.html"')
-        html=html.replace('assets/film/film-lift','assets/'+cut+'/film-offer').replace('.webp?v=walkthrough-1','.webp?v=1')
+        html=html.replace('https://freelunchtag.com/"','https://freelunchtag.com/'+path+'.html"')
+        html=html.replace('assets/film/film-lift','assets/'+cut+'/film-offer').replace('.webp?v=walkthrough-1',f'.webp?v={revision}')
         html=html.replace('#120d25',settings['color'])
         html=html.replace('<link rel="preload" as="font"', '<link rel="stylesheet" href="film-editions.css?v=2">\n<link rel="preload" as="font"')
         html=html.replace('How lunch works</button>','Lunch guide</button>')
         html=html.replace('<button type="button" id="readScene"', '<button type="button" id="tableTalk" aria-haspopup="dialog">Draw a table question</button>\n      <button type="button" id="readScene"')
         html=html.replace('Scroll to follow the glass', settings['cue'])
-        html=html.replace(f'<a href="{cut}.html">{name}</a>', '<a href="/">Original film</a>')
+        html=html.replace(f'<a href="{path}.html">{name}</a>', '<a href="/">Original film</a>')
         html=html.replace('<span>We want to</span> <span>buy you</span> <em>lunch!</em>', settings['title'])
         html=html.replace('These are the people from Meadows inviting neighbors to lunch. Tap a name to say hello.', 'Your tag connects you to a real person from Meadows in Plano. You can read their introduction before making a plan.')
         html=html.replace('Someone from Meadows Baptist Church in Plano would love to share a meal with you. Your host picks up the tab.', 'Pizza, tacos, coffee. Your Meadows host covers your lunch. Pick a public spot together and meet someone new.')
@@ -51,12 +55,15 @@ def build():
         html=html.replace('Tell your host over lunch that you’d like to invite someone, too.', 'Over lunch, tell your host you’d like to welcome someone to the table, too.')
         html=html.replace('Bring your tag<br><em>to Meadows.</em>', 'Trade tags.<br><em>Keep in touch.</em>')
         html=html.replace('After lunch, bring your tag to Meadows Baptist Church if you’d like to visit. We’d love to meet you.', 'Keep your tag on your bag or trade designs after lunch. Each code stays with its original host. If you’d like to meet more of the Meadows crew in Plano, you’re welcome to visit.')
-        html=html.replace('<div class="opening">','<div class="opening">\n        <noscript><img class="no-script-film" src="assets/'+cut+'/film-offer.webp" alt="'+settings['alt']+'"></noscript>')
+        html=html.replace('<div class="opening">','<div class="opening">\n        <noscript><img class="no-script-film" src="assets/'+cut+'/film-offer.webp?v='+revision+'" alt="'+settings['alt']+'"></noscript>')
         if cut=='pass-the-salsa':
             html=html.replace('Pizza Saturday?', 'Tacos at noon?')
             html=html.replace('Keep your tag on your bag', 'Keep your tag on your keys')
             html=html.replace('Draw a table question</button>', 'Mild or hot? Pick a question</button>')
             html=html.replace('Over lunch, tell your host you’d like to welcome someone to the table, too.', 'Tell your host you’d like to buy lunch for a neighbor next time.')
-        (ROOT/(cut+'.html')).write_text(html)
+        (ROOT/(path+'.html')).write_text(html)
+        if path!=cut:
+            # Preserve previously shared links, including QR fragments, on the same guest page.
+            (ROOT/(cut+'.html')).write_text(html)
 
 if __name__=='__main__': build()

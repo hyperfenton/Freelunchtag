@@ -104,10 +104,11 @@ test('each alternate cut has a shareable guest entry, five readable stops and re
   }
   assert.equal(route.at(-1)[1],lastFrame);
   for(const cut of ['found-tag','lunch-line','pass-the-salsa']){
-    const entry=await load(cut+'.html');
+    const path=cut==='pass-the-salsa'?'your-tag':cut;
+    const entry=await load(path+'.html');
     const config=configure(cut);
     assert.ok(entry.includes('data-film="'+cut+'"'));
-    assert.ok(entry.includes('https://freelunchtag.com/'+cut+'.html'));
+    assert.ok(entry.includes('https://freelunchtag.com/'+path+'.html'));
     assert.ok(entry.indexOf('history.replaceState')<entry.indexOf('<link'));
     assert.equal((entry.match(/id="codeForm"/g)||[]).length,1);
     assert.ok(entry.includes('Can I bring someone?'));
@@ -141,4 +142,14 @@ test('the two salsa bottles open distinct question decks at the final reading st
     const [mild,hot]=bottles.map(b=>objectBounds(b,cut.posterTimes.close,frame,[]));
     assert.ok(mild.x+mild.width<=hot.x);
   }
+});
+
+test('the invitation opens on the tag and previously shared links still open the same film',async()=>{
+  const {configure}=await import('../alternate-films.mjs');
+  const html=await load('your-tag.html');
+  assert.equal(await load('pass-the-salsa.html'),html);
+  assert.match(html,/<title>Someone gave you a Free Lunch Tag<\/title>/);
+  assert.doesNotMatch(html,/Pass the Salsa/i);
+  assert.match(await load('index.html'),/href="your-tag.html">Someone gave you a tag</);
+  assert.equal(configure('pass-the-salsa').tracks[0].action,'lookup');
 });

@@ -33,7 +33,7 @@ export function makeRoute(tops,end){
 export const nextStops=shots.map(name=>posterTimes[name]);
 // Percentages refer to the two native masters, portrait first then landscape.
 const salsaBounds=[
-  [12,24,88,70,32,10,68,72],[20,24,94,68,33,13,67,71],
+  [32,35,68,68,43,31,58,75],[20,24,94,68,33,13,67,71],
   [22,27,83,76,40,9,63,78],[6,34,94,91,29,16,70,94]
 ];
 const bottleBounds={
@@ -56,8 +56,10 @@ const salsaDecks={
 };
 export function configure(cut){
   const found=cut==='found-tag';
+  const invitation=cut==='pass-the-salsa';
   const objects=[
-    [found?'Turn the keychain in 3D':'Who buys lunch?',found?'Turn tag':'Who pays?',found?'collectorDialog':'sceneDialog',found?'gallery':'lunch'],
+    invitation ? ['Find the host on my tag','Meet my host','quickLookup','lookup']
+      : [found?'Turn the keychain in 3D':'Who buys lunch?',found?'Turn tag':'Who pays?',found?'collectorDialog':'sceneDialog',found?'gallery':'lunch'],
     ['Look up the code on your tag','Find host','quickLookup','lookup'],
     ['Text the host linked to your tag','Text host','quickLookup','lookup'],
     ['Explore Classic, Taco and Pizza','See tags','collectorDialog','gallery'],
@@ -66,8 +68,7 @@ export function configure(cut){
   const bounds=found
     ? [[29,35,73,62,39,24,62,65],[12,29,89,80,34,20,74,91],[9,18,92,84,24,12,96,90],[27,35,72,61,38,23,63,68],[28,35,72,62,39,24,63,67]]
     : [[25,28,77,51,33,16,68,53],[25,30,76,56,34,18,68,60],[28,26,72,67,39,18,63,72],[21,40,79,66,32,36,70,73],[19,39,81,66,31,34,69,73]];
-  const salsa=cut==='pass-the-salsa';
-  const allBounds=salsa?salsaBounds:bounds;
+  const allBounds=invitation?salsaBounds:bounds;
   const pins=found?[[.10,.13],[.08,.12],[.08,.18],[.12,.12],[.1,.11]]:
     [[.06,.03],[.09,.02],[.91,.13],[.09,.08],[.06,.05]];
   const tracks=allBounds.map((box,i)=>{
@@ -75,7 +76,7 @@ export function configure(cut){
     return {id:cut+'-'+shots[i],label,hint,dialog,action,pin:pins[i],
       frames:[[Math.max(0,readings[i]-.16),...box],[Math.min(lastFrame,readings[i]+2.57),...box]]};
   });
-  if(salsa){
+  if(invitation){
     for(const [deck,bounds] of Object.entries(bottleBounds)){
       const {label,hint}=salsaDecks[deck];
       tracks.push({id:cut+'-'+deck,label:'Open '+label.toLowerCase()+' from the salsa bottle',hint,action:'talk',deck,dialog:'sceneDialog',pin:[.5,.16],
@@ -83,8 +84,8 @@ export function configure(cut){
     }
   }
   return {chapters,sceneAt,makeRoute,mapValue,fps,lastFrame,posterTimes,nextStops,
-    album:'assets/'+cut+'/', revision:'?v=1',
-    cue:salsa?'Follow the lime':found?'Scroll with the tag':'Scroll down the counter',
-    replay:salsa?'Back to the taco stand':found?'Find it again':'Back to the pizza box',
-    tracks, questionDecks:salsa?salsaDecks:undefined};
+    album:'assets/'+cut+'/', revision:invitation?'?v=2':'?v=1',
+    cue:invitation?'See how lunch works':found?'Scroll with the tag':'Scroll down the counter',
+    replay:invitation?'Back to your tag':found?'Find it again':'Back to the pizza box',
+    tracks, questionDecks:invitation?salsaDecks:undefined};
 }
