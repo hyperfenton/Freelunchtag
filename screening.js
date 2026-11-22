@@ -1,5 +1,5 @@
-import {chapters, fps, lastFrame, makeRoute, mapValue, sceneAt} from './scroll-route.mjs?v=journey-1';
-import {mountFilmObjects, posterTimes} from './film-objects.mjs?v=touch-1';
+import {chapters, fps, lastFrame, makeRoute, mapValue, sceneAt} from './scroll-route.mjs?v=walkthrough-1';
+import {mountFilmObjects, posterTimes} from './film-objects.mjs?v=walkthrough-1';
 
 const byId=id=>document.getElementById(id);
 const root=document.documentElement, cinema=byId('cinema'), film=byId('storyFilm');
@@ -9,7 +9,7 @@ const nextButton=byId('continueFilm'), options=byId('filmOptions');
 const details=byId('sceneDialog'), content=byId('sceneContent'), title=byId('sceneTitle');
 const quick=byId('quickTag'), watch=byId('watchFilm'), cue=byId('scrollCue');
 const wide=matchMedia('(min-aspect-ratio:1/1)'), reduce=matchMedia('(prefers-reduced-motion:reduce)');
-const album='assets/film/', revision='?v=invitation-1';
+const album='assets/film/', revision='?v=walkthrough-1';
 const dialogsOpen=()=>Boolean(document.querySelector('dialog[open]'));
 const motionOff=()=>reduce.matches||root.dataset.motion==='off'||navigator.connection?.saveData===true;
 const frameTime=t=>Math.max(0,Math.min(lastFrame,Math.round(t*fps)/fps));
@@ -21,8 +21,11 @@ function measure(){
   const last=Math.max(1,root.scrollHeight-innerHeight);
   route=makeRoute(chapters.map(ch=>byId(ch.id).getBoundingClientRect().top+scrollY),last);
 }
-function showPoster(i){
-  const name=chapters[i].still;
+function stillAt(i,t){
+  return chapters[i].id==='made-with-love' && t<33.2 ? 'visit' : chapters[i].still;
+}
+function showPoster(i,t){
+  const name=stillAt(i,t);
   if(still.dataset.shot===name)return;
   still.dataset.shot=name;
   widePhoto.srcset=album+'film-'+name+'-wide.webp'+revision;
@@ -38,7 +41,7 @@ function setScene(t){
     nextButton.setAttribute('aria-label',i===chapters.length-1?'Back to the table':'Follow the camera to the next part');
     nextButton.classList.toggle('at-end',i===chapters.length-1);
   }
-  objects.show(cinema.classList.contains('on-film') ? t : posterTimes[chapters[i].still]);
+  objects.show(cinema.classList.contains('on-film') ? t : posterTimes[stillAt(i,t)]);
 }
 function chooseFile(){
   if(motionOff()||dialogsOpen())return;
@@ -48,7 +51,7 @@ function chooseFile(){
   film.preload='auto';film.src=name;film.load();
 }
 function posterAt(t){
-  cinema.classList.remove('on-film');setScene(t);showPoster(sceneAt(t));
+  cinema.classList.remove('on-film');setScene(t);showPoster(sceneAt(t),t);
 }
 function reveal(){
   if((watching||Math.abs(film.currentTime-wanted)<.5/fps||cinema.classList.contains('on-film'))&&ready&&!motionOff()&&!unavailable&&film.readyState>=2){
@@ -257,7 +260,7 @@ function followHash(){
 }
 for(const chapter of chapters)byId(chapter.id).style.setProperty('--travel',chapter.span+'svh');
 root.classList.add('projecting');
-measure();wanted=frameTime(mapValue(route,scrollY));setScene(wanted);showPoster(selected);
+measure();wanted=frameTime(mapValue(route,scrollY));setScene(wanted);showPoster(selected,wanted);
 addEventListener('hashchange',followHash);
 if(location.hash)followHash();
 updateMotion();

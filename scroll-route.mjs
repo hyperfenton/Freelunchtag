@@ -2,12 +2,12 @@
 export const duration=36;
 export const fps=24;
 export const chapters=[
-  {id:'hero',start:0,read:4.82,still:'lift',label:'Read the lunch invitation',span:168},
+  {id:'hero',start:0,read:4.82,still:'lift',label:'Read the lunch invitation',span:180},
   {id:'lunch',start:5.05,read:6.65,still:'floor',label:'Read what the invitation covers',span:94},
   {id:'hosts',start:7.25,read:8.52,still:'host',label:'Meet the lunch hosts',span:84},
-  {id:'how',start:9.05,read:10.9,still:'broom',label:'Read how to use the tag',span:136},
+  {id:'how',start:9.05,read:10.9,still:'broom',label:'Read how to use the tag',span:174},
   {id:'video',start:11.85,read:13.45,still:'toss',label:'Open the original lunch explainer',span:84},
-  {id:'story',start:14.7,read:16.75,still:'story',label:'Read the story of the second place setting',span:126},
+  {id:'story',start:14.7,read:16.75,still:'story',label:'Read the story of the second place setting',span:172},
   {id:'why',start:17.72,read:19.65,still:'why',label:'Read why Meadows buys lunch',span:92},
   {id:'claim',start:21.05,read:22.9,still:'claim',label:'Enter your invitation code',span:106},
   {id:'bonus',start:24.05,read:28.85,still:'visit',label:'View Meadows visiting times',span:140},
@@ -22,16 +22,16 @@ export function sceneAt(t){
 // Stops remain strictly monotone in both directions. Added distance around the
 // offer, printed instructions, shared meal and bloom makes a small drag readable.
 const pacing=[
-  [[0,0],[.22,.9],[.48,2.75],[.73,4.53],[.92,4.92]],
+  [[0,0],[.36,.72],[.54,2.4],[.73,4.53],[.92,4.92]],
   [[0,5.05],[.43,6.45],[.75,6.82]],
   [[0,7.25],[.68,8.52]],
-  [[0,9.05],[.24,10.32],[.58,10.88],[.82,11.1]],
+  [[0,9.05],[.21,10.4],[.47,10.78],[.85,11.14]],
   [[0,11.85],[.62,13.45]],
-  [[0,14.7],[.36,16.24],[.71,16.84]],
+  [[0,14.7],[.22,16.12],[.78,16.94],[.91,17.18]],
   [[0,17.72],[.64,19.65]],
   [[0,21.05],[.66,22.9]],
   [[0,24.05],[.23,25.25],[.64,28.5],[.85,29.35]],
-  [[0,30],[.22,31.1],[.59,34.25],[.83,35.55],[1,lastFrame]]
+  [[0,30],[.33,31.22],[.59,34.25],[.83,35.55],[1,lastFrame]]
 ];
 export function makeRoute(tops,end){
   const points=[];

@@ -1,3 +1,5 @@
+import {readingMoves} from './film-camera.mjs';
+
 // Object bounds measured against the released film. Each row contains the time in
 // seconds, then left/top/right/bottom percentages for the portrait and wide masters.
 // Travel between the marks is linear. Outside a track the object cannot be tapped.
@@ -14,23 +16,23 @@ export const filmObjects = [
     [7, 3.3, 24.2, 81.5, 51.6, 26.0, -4.3, 70.0, 54.9],
     [7.45, -8.1, 9.9, 84.3, 48.4, 20.0, -28.7, 72.0, 46.8],
   ]},
-  {id: 'card', label: 'Enter the code on your invitation', hint: 'Enter tag', dialog: 'quickLookup', pin: [0.9, 0.85], frames: [
-    [9.5, 75.8, 48.9, 126.1, 61.4, 63.7, 40.3, 92.0, 67.3],
-    [10, 54.9, 49.2, 110.6, 61.2, 50.7, 38.2, 82.0, 64.2],
-    [10.5, 40.9, 48.8, 100.8, 61.5, 42.4, 36.6, 76.1, 64.1],
-    [11.5, 39.5, 48.7, 100.1, 62.4, 41.6, 36.4, 75.7, 66.1],
-    [12, 36.7, 52.9, 99.6, 64.6, 40.0, 45.5, 75.4, 70.9],
-    [12.5, 42.5, 63.7, 99.4, 75.5, 43.5, 69.1, 75.5, 94.6],
+  {id: 'card', label: 'Enter the code on your invitation', hint: 'Enter tag', dialog: 'quickLookup', pin: [0.08, 0.08], frames: [
+    [9.5, 72.2, 48.9, 122.5, 61.4, 63.7, 40.3, 92.0, 67.3],
+    [10, 50.1, 49.2, 105.8, 61.2, 50.7, 38.2, 82.0, 64.2],
+    [10.5, 35.7, 48.8, 95.6, 61.5, 42.4, 36.6, 76.1, 64.1],
+    [11.5, 34.3, 48.7, 94.9, 62.4, 41.6, 36.4, 75.7, 66.1],
+    [12, 31.5, 52.9, 94.4, 64.6, 40.0, 45.5, 75.4, 70.9],
+    [12.5, 37.6, 63.7, 94.5, 75.5, 43.5, 69.1, 75.5, 94.6],
   ]},
   {id: 'tag', label: 'Turn the collectible tag in 3-D', hint: 'Turn tag', dialog: 'collectorDialog', pin: [0.45, 0.18], frames: [
-    [9.5, 53.3, 51.1, 74.9, 67.2, 51.0, 45.1, 63.2, 79.9],
-    [10, 28.1, 51.2, 53.7, 67.4, 35.6, 42.7, 50.0, 77.7],
-    [10.5, 10.9, 50.2, 39.5, 67.0, 25.5, 39.6, 41.6, 76.1],
-    [11.5, 6.8, 50.5, 36.7, 67.1, 23.2, 40.3, 40.0, 76.2],
-    [12, 5.9, 54.9, 36.0, 71.0, 22.7, 49.9, 39.6, 84.8],
-    [12.5, 10.3, 65.3, 40.7, 82.3, 25.4, 72.7, 42.5, 107.2],
+    [9.5, 49.7, 51.1, 71.3, 67.2, 51.0, 45.1, 63.2, 79.9],
+    [10, 23.3, 51.2, 48.9, 67.4, 35.6, 42.7, 50.0, 77.7],
+    [10.5, 5.7, 50.2, 34.3, 67.0, 25.5, 39.6, 41.6, 76.1],
+    [11.5, 1.6, 50.5, 31.5, 67.1, 23.2, 40.3, 40.0, 76.2],
+    [12, 0.7, 54.9, 30.8, 71.0, 22.7, 49.9, 39.6, 84.8],
+    [12.5, 5.4, 65.3, 35.8, 82.3, 25.4, 72.7, 42.5, 107.2],
   ]},
-  {id: 'bowl', label: 'Find out who buys lunch', hint: 'Who buys lunch?', dialog: 'sceneDialog', pin: [0.77, 0.74], frames: [
+  {id: 'bowl', label: 'Find out who buys lunch', hint: 'Who buys lunch?', dialog: 'sceneDialog', pin: [0.25, 0.32], frames: [
     [14.9, -34.9, 47.5, 24.6, 60.7, 4.0, 37.6, 37.5, 66.1],
     [15.5, -26.7, 52.5, 35.2, 68.6, 7.7, 49.0, 42.5, 83.9],
     [16.5, -23.9, 52.8, 37.1, 68.9, 7.7, 50.5, 42.0, 85.3],
@@ -47,7 +49,7 @@ export const filmObjects = [
     [25.44, 66.1, 41.4, 126.7, 66.0, 60.7, 16.0, 94.8, 69.3],
     [26, 38.5, 37.4, 92.9, 58.7, 44.8, 7.1, 75.4, 53.1],
   ]},
-  {id: 'shard', label: 'Grow the garden flowers', hint: 'Grow flowers', dialog: '', pin: [0.65, 0.7], frames: [
+  {id: 'shard', label: 'Grow the garden flowers', hint: 'Grow flowers', dialog: '', pin: [0.19, 0.60], frames: [
     [28.82, -29.6, 46.2, 77.4, 70.6, 4.8, 25.9, 65.0, 78.7],
     [30, -27.1, 46.1, 79.4, 69.6, 5.6, 25.7, 65.5, 76.6],
     [31.5, -28.2, 46.1, 77.6, 69.7, 5.5, 31.8, 65.0, 82.9],
@@ -63,7 +65,7 @@ export const filmObjects = [
 // The poster filenames are shared with the reduced-motion and loading views.
 export const posterTimes = {
   lift: 0, floor: 6.65, host: 8.52, broom: 10.9, toss: 13.45, story: 16.75,
-  why: 19.65, claim: 22.9, visit: 28.85, close: 35.95
+  why: 19.65, claim: 22.9, visit: 29.85, close: 35.95
 };
 
 export function mediaFrame(width, height, wide, fit) {
@@ -91,7 +93,20 @@ export function objectBounds(track, time, frame) {
   const left = marks[Math.max(0, index - 1)], right = marks[index];
   const blend = left === right ? 0 : (time - left[0]) / (right[0] - left[0]);
   const offset = frame.wide ? 5 : 1;
-  const at = i => left[offset+i] + (right[offset+i] - left[offset+i]) * blend;
+  const move = readingMoves.find(({seconds:[start,,,end]}) => time > start && time < end);
+  let zoom = 1;
+  let pivot = [0,0];
+  if (move) {
+    const [start,settle,leave,end] = move.seconds;
+    const phase = Math.min(1, (time-start)/(settle-start), (end-time)/(end-leave));
+    zoom += (move.scale-1) * (1-Math.cos(Math.PI*phase))/2;
+    pivot = frame.wide ? move.wide : move.portrait;
+  }
+  const at = i => {
+    const value = left[offset+i] + (right[offset+i] - left[offset+i]) * blend;
+    const centre = 100 * pivot[i%2];
+    return centre + zoom * (value-centre);
+  };
   const x = visibleAxis(at(0), at(2), frame.x, frame.w, frame.width);
   const y = visibleAxis(at(1), at(3), frame.y, frame.h, frame.height);
   return x && y ? {x:x[0], y:y[0], width:x[1], height:y[1]} : null;
