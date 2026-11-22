@@ -22,3 +22,20 @@ html[data-film="lunch-line"]{--paper:#fff4dc;--ink:#15254a;--ring:#e84622}
 [data-film="lunch-line"] #continueFilm,[data-film="lunch-line"] #invitationGuide{background:#fff3d8;color:#322823}
 [data-film="lunch-line"] #collectorDialog{background:radial-gradient(ellipse at 50% 48%,#e1f5e9,#72c4b5);color:#152c41}
 [data-film="lunch-line"] #sceneDialog .guest-steps blockquote{background:#f9e1bf;border-color:#bd3723}
+
+html[data-film="pass-the-salsa"]{--paper:#fff4d8;--ink:#1b3424;--ring:#ab401a}
+[data-film="pass-the-salsa"] #quickTag,[data-film="pass-the-salsa"] .button{background:#204c36;color:white}
+[data-film="pass-the-salsa"] #invitationGuide,[data-film="pass-the-salsa"] #continueFilm{background:#fff3d6;color:#213a2b;border-color:#344c2f4f}
+[data-film="pass-the-salsa"] #sceneDialog,[data-film="pass-the-salsa"] #quickLookup{background:#fff6df;border-color:#bdb190;color:#223c2c}
+[data-film="pass-the-salsa"] #sceneTitle{color:#1d412e;font:800 clamp(2rem,6vw,3.3rem)/.99 var(--type)}
+[data-film="pass-the-salsa"] #collectorDialog{background:radial-gradient(ellipse at 50% 45%,#fff6d6,#b3c79a);color:#193c29}
+[data-film="pass-the-salsa"] #sceneDialog .guest-steps blockquote{background:#f6e5be;border-color:#bd4725;color:#2f412c}
+.salsa-choices{display:flex;flex-wrap:wrap;gap:8px;margin-top:1rem}
+.salsa-choices button{border:1px solid #65715f;border-radius:30px;padding:9px 16px;min-height:44px;background:transparent;color:#233c29;font-weight:650}
+.salsa-choices [value="mild"][aria-pressed="true"]{background:#285439;border-color:#285439;color:#fff}
+.salsa-choices [value="hot"][aria-pressed="true"]{background:#a93820;border-color:#a93820;color:#fff}
+[data-object="pass-the-salsa-mild"] .film-pin,[data-object="pass-the-salsa-hot"] .film-pin{background:#244632}
+[data-object="pass-the-salsa-hot"] .film-pin{background:#9a3621}
+
+/* Touch screens have no hover. Place each invitation above its bottle cap. */
+[data-object="pass-the-salsa-mild"] .film-pin-label,[data-object="pass-the-salsa-hot"] .film-pin-label{opacity:1;left:50%;right:auto;bottom:calc(100% + 4px);transform:translateX(-50%);background:#fff5dc;color:#243b2a;box-shadow:0 1px 3px #302a2060}

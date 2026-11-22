@@ -103,7 +103,7 @@ test('each alternate cut has a shareable guest entry, five readable stops and re
     previous=point;
   }
   assert.equal(route.at(-1)[1],lastFrame);
-  for(const cut of ['found-tag','lunch-line']){
+  for(const cut of ['found-tag','lunch-line','pass-the-salsa']){
     const entry=await load(cut+'.html');
     const config=configure(cut);
     assert.ok(entry.includes('data-film="'+cut+'"'));
@@ -112,7 +112,7 @@ test('each alternate cut has a shareable guest entry, five readable stops and re
     assert.equal((entry.match(/id="codeForm"/g)||[]).length,1);
     assert.ok(entry.includes('Can I bring someone?'));
     for(const [i,track] of config.tracks.entries()){
-      const {frames}=track,t=config.nextStops[i];
+      const {frames}=track,t=config.nextStops[track.deck ? 4 : i];
       assert.ok(frames[0][0]<=t && frames.at(-1)[0]>=t,'the object is present at its reading stop');
       assert.ok(Math.abs(t-mapValue(route,mapValue(route,t,true)))<1e-7);
     }
@@ -122,5 +122,23 @@ test('each alternate cut has a shareable guest entry, five readable stops and re
         assert.ok((await stat(file)).size>5000);
       }
     }
+  }
+});
+
+test('the two salsa bottles open distinct question decks at the final reading stop',async()=>{
+  const {configure}=await import('../alternate-films.mjs');
+  const {mediaFrame,objectBounds}=await import('../film-objects.mjs');
+  const cut=configure('pass-the-salsa');
+  const bottles=cut.tracks.filter(track=>track.deck);
+  assert.deepEqual(bottles.map(track=>track.deck),['mild','hot']);
+  for(const bottle of bottles){
+    assert.equal(bottle.action,'talk');
+    assert.ok(cut.questionDecks[bottle.deck].questions.length>1);
+  }
+  assert.notEqual(cut.questionDecks.mild.questions[0], cut.questionDecks.hot.questions[0]);
+  for(const [w,h,wide] of [[320,694,false],[390,844,false],[1400,850,true]]){
+    const frame=mediaFrame(w,h,wide,'cover');
+    const [mild,hot]=bottles.map(b=>objectBounds(b,cut.posterTimes.close,frame,[]));
+    assert.ok(mild.x+mild.width<=hot.x);
   }
 });

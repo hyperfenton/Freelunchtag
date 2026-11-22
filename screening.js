@@ -2,7 +2,7 @@ import * as originalRoute from './scroll-route.mjs?v=walkthrough-1';
 import {mountFilmObjects, posterTimes as originalPosters} from './film-objects.mjs?v=editions-1';
 
 const editionName=document.documentElement.dataset.film;
-const edition=editionName ? (await import('./alternate-films.mjs?v=1')).configure(editionName) : null;
+const edition=editionName ? (await import('./alternate-films.mjs?v=2')).configure(editionName) : null;
 const {chapters, fps, lastFrame, makeRoute, mapValue, sceneAt}=edition || originalRoute;
 const posterTimes=edition?.posterTimes || originalPosters;
 const byId=id=>document.getElementById(id);
@@ -132,7 +132,7 @@ function activateObject(track,button,displayedTime){
   closeMenu();
   stopWatching();
   if(cinema.classList.contains('on-film')&&Math.abs(wanted-displayedTime)>.5/fps)jumpToFrame(displayedTime);
-  if(track.action==='talk'){openTableTalk(button);return;}
+  if(track.action==='talk'){openTableTalk(button,track.deck);return;}
   if(track.action==='lunch'){sceneDetails('lunch',button);return;}
   if(track.action==='gallery')byId('inspectTag').click();
   else if(track.action==='lookup')quick.click();
@@ -240,7 +240,7 @@ function sceneDetails(id=chapters[selected].id, trigger=options.querySelector('s
   }
   details.showModal();byId('closeScene').focus();
 }
-let promptIndex=0;
+const promptIndex=new Map();
 const tableQuestions=[
   'Your friend has the aux for one song. What should they play?',
   'You get to put one local spot on the map. Where are we eating?',
@@ -248,15 +248,40 @@ const tableQuestions=[
   'Which pizza topping are you willing to defend?',
   'You have a free Saturday and twenty bucks. What’s the plan?'
 ];
-function openTableTalk(trigger){
+function openTableTalk(trigger,deck){
   closeMenu();stopWatching();
   if(dialogsOpen())return;
   sceneReturn=trigger;
   details.removeAttribute('data-guide');title.textContent='Pass a question around.';
   const question=document.createElement('p');question.className='table-question';question.setAttribute('aria-live','polite');
   const next=document.createElement('button');next.type='button';next.className='button';next.textContent='Draw another';
-  const draw=()=>{question.textContent=tableQuestions[promptIndex];promptIndex=(promptIndex+1)%tableQuestions.length;};
-  draw();next.addEventListener('click',draw);content.replaceChildren(question,next);
+  const decks=edition?.questionDecks;
+  let current=deck || (decks?'mild':'original');
+  const draw=()=>{
+    const questions=decks ? decks[current].questions : tableQuestions;
+    const index=promptIndex.get(current) || 0;
+    question.textContent=questions[index];
+    promptIndex.set(current,(index+1)%questions.length);
+  };
+  next.addEventListener('click',draw);
+  content.replaceChildren(question,next);
+  if(decks){
+    const choices=document.createElement('div');
+    choices.className='salsa-choices';
+    choices.setAttribute('role','group');choices.setAttribute('aria-label','Choose a table question');
+    const pick=key=>{
+      current=key;
+      for(const button of choices.children)button.setAttribute('aria-pressed',String(button.value===key));
+      title.textContent=decks[key].heading;
+      draw();
+    };
+    for(const [key,choice] of Object.entries(decks)){
+      const button=document.createElement('button');
+      button.type='button';button.value=key;button.textContent=choice.label;
+      button.addEventListener('click',()=>pick(key));choices.append(button);
+    }
+    content.prepend(choices);pick(current);
+  }else draw();
   details.showModal();byId('closeScene').focus();
 }
 byId('tableTalk')?.addEventListener('click',e=>openTableTalk(e.currentTarget));
