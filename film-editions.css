@@ -1,0 +1,24 @@
+html[data-film]{--paper:#f6f2eb;--ink:#171a20;--ring:#3a6aea}
+html[data-film="lunch-line"]{--paper:#fff4dc;--ink:#15254a;--ring:#e84622}
+[data-film] .film-tools{gap:5px}
+[data-film] #filmOptions summary,[data-film] #invitationGuide,[data-film] #continueFilm{background:#f8f7eff2;color:#202225;border:1px solid #2223;box-shadow:0 1px 5px #2222}
+[data-film] #invitationGuide{font-size:.77rem}
+[data-film] .tool-list{background:#fcfaf3;color:#202125;border-color:#2222}
+[data-film] .tool-list button,[data-film] .tool-list a{color:inherit}
+[data-film] .tool-list button:hover,[data-film] .tool-list a:hover{background:#e6e5dc}
+[data-film] #quickTag{top:21%;border-radius:12px 0 0 12px;color:white;background:#1e2639eb;border-color:#fff8}
+[data-film] #continueFilm{left:max(12px,env(safe-area-inset-left));transform:none;bottom:max(12px,env(safe-area-inset-bottom));min-height:44px}
+[data-film] .film-pin{border-color:#fff;background:#1c2739bc;box-shadow:0 0 0 3px #fff4}
+[data-film] .film-pin-label{background:#172131}
+[data-film] #collectorDialog{background:radial-gradient(ellipse at 50% 48%,#f3f3ef,#b1c2c4);color:#17212a}
+[data-film] #collectorDialog button{color:inherit;border-color:#52666d77}
+[data-film] #collectorDialog .selector{border-color:#3349}
+[data-film] #collectorDialog .selector button[aria-pressed=true],[data-film] .button{background:#1c2a38;color:white}
+[data-film] #sceneDialog,[data-film] #quickLookup{border-radius:10px}
+[data-film] .table-question{font-size:clamp(1.45rem,5vw,2.2rem);line-height:1.12;letter-spacing:-.03em;margin:1.5rem 0}
+[data-film] #sceneDialog .guest-steps blockquote{background:#e5edef;color:#162532;border-color:#608181}
+[data-film] .no-script-film{height:auto;width:min(100%,300px)}
+[data-film="lunch-line"] .button,[data-film="lunch-line"] #quickTag{background:#b5301a;color:#fff}
+[data-film="lunch-line"] #continueFilm,[data-film="lunch-line"] #invitationGuide{background:#fff3d8;color:#322823}
+[data-film="lunch-line"] #collectorDialog{background:radial-gradient(ellipse at 50% 48%,#e1f5e9,#72c4b5);color:#152c41}
+[data-film="lunch-line"] #sceneDialog .guest-steps blockquote{background:#f9e1bf;border-color:#bd3723}

@@ -86,14 +86,14 @@ function visibleAxis(a, b, offset, size, viewport) {
   return [start, hitSize];
 }
 
-export function objectBounds(track, time, frame) {
+export function objectBounds(track, time, frame, moves=readingMoves) {
   const marks = track.frames;
   if (time < marks[0][0] || time > marks.at(-1)[0]) return null;
   const index = marks.findIndex(row => row[0] >= time);
   const left = marks[Math.max(0, index - 1)], right = marks[index];
   const blend = left === right ? 0 : (time - left[0]) / (right[0] - left[0]);
   const offset = frame.wide ? 5 : 1;
-  const move = readingMoves.find(({seconds:[start,,,end]}) => time > start && time < end);
+  const move = moves.find(({seconds:[start,,,end]}) => time > start && time < end);
   let zoom = 1;
   let pivot = [0,0];
   if (move) {
@@ -112,7 +112,7 @@ export function objectBounds(track, time, frame) {
   return x && y ? {x:x[0], y:y[0], width:x[1], height:y[1]} : null;
 }
 
-export function mountFilmObjects(layer, activate) {
+export function mountFilmObjects(layer, activate, tracks=filmObjects, moves=readingMoves) {
   let press;
   layer.addEventListener('pointerdown', event => {
     press = {id:event.pointerId, x:event.clientX, y:event.clientY, dragged:false};
@@ -121,7 +121,7 @@ export function mountFilmObjects(layer, activate) {
     if (press?.id === event.pointerId && Math.hypot(event.clientX-press.x, event.clientY-press.y) > 9) press.dragged = true;
   });
   layer.addEventListener('pointercancel', () => { if (press) press.dragged = true; });
-  const buttons = filmObjects.map(track => {
+  const buttons = tracks.map(track => {
     const button = document.createElement('button');
     button.type = 'button';
     button.hidden = true;
@@ -162,7 +162,7 @@ export function mountFilmObjects(layer, activate) {
       if (!frame || lastTime === time) return;
       lastTime = time;
       for (const {track, button, pin} of buttons) {
-        const box = objectBounds(track, time, frame);
+        const box = objectBounds(track, time, frame, moves);
         if (!box) {
           if (!button.hidden) button.hidden = true;
           continue;

@@ -154,6 +154,8 @@ quickTrigger.addEventListener('click', () => {
 });
 byId('closeLookup').addEventListener('click', () => lookupDialog.close());
 lookupDialog.addEventListener('close', () => {
+  // A QR can reopen the sheet before the previous close event is delivered.
+  if(lookupDialog.open)return;
   ticketHome.after(ticket);
   if(location.hash==='#claim' && document.documentElement.classList.contains('projecting')) document.getElementById('cinema').dataset.returned='true';
   quickTrigger.focus({preventScroll:true});

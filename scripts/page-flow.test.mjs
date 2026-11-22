@@ -92,3 +92,35 @@ test('the guest guide and manual entry are reachable before exploring film objec
   assert.equal((guide.match(/<li>/g)||[]).length,3);
   assert.equal((page.match(/id="codeForm"/g)||[]).length,1);
 });
+
+test('each alternate cut has a shareable guest entry, five readable stops and reversible scroll',async()=>{
+  const {chapters,configure,lastFrame,makeRoute,mapValue}=await import('../alternate-films.mjs');
+  const tops=chapters.map((_,i)=>i*1000),end=tops.at(-1)+840;
+  const route=makeRoute(tops,end);
+  let previous=[-1,-1];
+  for(const point of route){
+    assert.ok(point[0]>previous[0] && point[1]>previous[1]);
+    previous=point;
+  }
+  assert.equal(route.at(-1)[1],lastFrame);
+  for(const cut of ['found-tag','lunch-line']){
+    const entry=await load(cut+'.html');
+    const config=configure(cut);
+    assert.ok(entry.includes('data-film="'+cut+'"'));
+    assert.ok(entry.includes('https://freelunchtag.com/'+cut+'.html'));
+    assert.ok(entry.indexOf('history.replaceState')<entry.indexOf('<link'));
+    assert.equal((entry.match(/id="codeForm"/g)||[]).length,1);
+    assert.ok(entry.includes('Can I bring someone?'));
+    for(const [i,track] of config.tracks.entries()){
+      const {frames}=track,t=config.nextStops[i];
+      assert.ok(frames[0][0]<=t && frames.at(-1)[0]>=t,'the object is present at its reading stop');
+      assert.ok(Math.abs(t-mapValue(route,mapValue(route,t,true)))<1e-7);
+    }
+    for(const name of Object.keys(config.posterTimes)){
+      for(const aspect of ['', '-wide']){
+        const file=new URL('../assets/'+cut+'/film-'+name+aspect+'.webp',import.meta.url);
+        assert.ok((await stat(file)).size>5000);
+      }
+    }
+  }
+});
