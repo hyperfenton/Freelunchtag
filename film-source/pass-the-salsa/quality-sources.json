@@ -5,7 +5,7 @@
   "aspect_ratio": "auto",
   "enhancement": "default",
   "frame_interpolation": null,
-  "notes": "Enhanced from the original camera takes, not the previous 720p web film. All takes retain 145 frames at 24 fps; no interpolation. Existing original takes are retained in this directory. Download each URL to its relative path in a separate working source directory and run scripts/render-quality-editions.py.",
+  "notes": "The eight enhanced original takes are retained as sharp photograph sources and the reviewed portrait motion. Four separate replacement desktop camera takes preserve rigid props through natural foreground occlusion. Prepare both groups with scripts/prepare-quality-sources.py. No optical-flow interpolation or motion retiming is used.",
   "sources": [
     {
       "path": "wide/00.mp4",
@@ -121,7 +121,9 @@
     }
   ],
   "homepage_motion": {
-    "mode": "fixed_photographs_with_uniform_zoom_and_clean_cuts",
+    "mode": "reviewed_camera_transitions",
+    "source_directory": "motion",
+    "cuts_config": "film-source/pass-the-salsa/motion-edits.json",
     "anchor_frames": [
       {
         "take": "00.mp4",
@@ -144,15 +146,146 @@
         "frame": 144
       }
     ],
-    "cut_frames": [
-      136,
-      353,
-      548,
-      730
-    ],
-    "maximum_additional_zoom": 1.015,
-    "generated_transition_frames_used": false,
+    "wide_holds": "Original enhanced photographs at the hold-24 poster composition with a shared 2% center crop, held stationary.",
+    "wide_transitions": "Four reviewed camera moves; three enhanced to 3840x2160 with Topaz and one generated at 3840x2160. All retain 24 fps.",
+    "portrait_transitions": "Original enhanced portrait camera takes with reviewed defect intervals removed using clean editorial cuts.",
+    "output_frames": 866,
+    "fps": 24,
+    "generated_transition_frames_used": true,
     "frame_blending": false,
-    "optical_flow": false
-  }
+    "optical_flow": false,
+    "retiming": false,
+    "wide_alignment": {
+      "shared_overscan": 1.02,
+      "mode": "one constant uniform scale and translation per take, applied to the whole image",
+      "takes": [
+        {
+          "take": "00",
+          "scale": 1.01884,
+          "translation_x_fraction": 0.00929,
+          "translation_y_fraction": 0.01673
+        },
+        {
+          "take": "01",
+          "scale": 1.01879,
+          "translation_x_fraction": 0.00909,
+          "translation_y_fraction": 0.01699
+        },
+        {
+          "take": "02",
+          "scale": 1.01859,
+          "translation_x_fraction": 0.00902,
+          "translation_y_fraction": 0.01681
+        },
+        {
+          "take": "03",
+          "scale": 1.01946,
+          "translation_x_fraction": 0.00842,
+          "translation_y_fraction": 0.01613
+        }
+      ],
+      "temporal_transform_changes": false,
+      "per_object_warping": false
+    },
+    "source_review": {
+      "date": "2026-11-24",
+      "desktop_4k_frames_reviewed": 436,
+      "review_scope": [
+        "every source frame for motion stability",
+        "native-resolution detail crops",
+        "lettering and logo consistency",
+        "rigid props, ground contact and occlusion"
+      ],
+      "result": "accepted; final assembly separately checked before publication"
+    }
+  },
+  "motion_overrides": [
+    {
+      "path": "wide/00.mp4",
+      "job_id": "3a7d3d17-934b-46a2-a482-16c41d63fcca",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_33vld0rG4YKak1BAYAmJDhJgTVg/hf_20261124_165656_3a7d3d17-934b-46a2-a482-16c41d63fcca.mp4",
+      "bytes": 37260641,
+      "sha256": "68a9ff2664bee7360fc26a9983d37689a718cfd36d9003d5f0c42e1c3c2d92f3",
+      "width": 3840,
+      "height": 2160,
+      "r_frame_rate": "24/1",
+      "duration": "4.041667",
+      "nb_frames": "97",
+      "model": "topaz_video",
+      "source_model": "seedance_2_5",
+      "source_job_id": "f4e67037-48e3-4572-aecd-e5037582151e",
+      "resolution": "2160p",
+      "frame_interpolation": null,
+      "normalization": {
+        "append_final_frames": 48,
+        "output_frames": 145,
+        "fps": 24
+      }
+    },
+    {
+      "path": "wide/01.mp4",
+      "job_id": "c71ff027-cce0-448c-b589-4b5ded42d23a",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_33vld0rG4YKak1BAYAmJDhJgTVg/hf_20261124_165655_c71ff027-cce0-448c-b589-4b5ded42d23a.mp4",
+      "bytes": 18616176,
+      "sha256": "dda05c4869ff68a502d65b35d269ee67660fe3c17179457a36216a459e76f410",
+      "width": 3840,
+      "height": 2160,
+      "r_frame_rate": "24/1",
+      "duration": "4.041667",
+      "nb_frames": "97",
+      "model": "topaz_video",
+      "source_model": "seedance_2_5",
+      "source_job_id": "966e8ece-2589-4ecd-9ead-ec91bc8ad77d",
+      "resolution": "2160p",
+      "frame_interpolation": null,
+      "normalization": {
+        "append_final_frames": 48,
+        "output_frames": 145,
+        "fps": 24
+      }
+    },
+    {
+      "path": "wide/02.mp4",
+      "job_id": "a7e66a3c-bf9c-4182-89bd-d8ab868c55ae",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_33vld0rG4YKak1BAYAmJDhJgTVg/hf_20261124_165657_a7e66a3c-bf9c-4182-89bd-d8ab868c55ae.mp4",
+      "bytes": 31177945,
+      "sha256": "6eb78fb4800c93f91cf67b93ed4dae11e9dedeec93f045992e959a4a9820a3c5",
+      "width": 3840,
+      "height": 2160,
+      "r_frame_rate": "24/1",
+      "duration": "4.041667",
+      "nb_frames": "97",
+      "model": "topaz_video",
+      "source_model": "seedance_2_5",
+      "source_job_id": "3deeba38-6778-4fa2-b5d3-41c5c3891748",
+      "resolution": "2160p",
+      "frame_interpolation": null,
+      "normalization": {
+        "append_final_frames": 48,
+        "output_frames": 145,
+        "fps": 24
+      }
+    },
+    {
+      "path": "wide/03.mp4",
+      "job_id": "0ddbefa9-bdb8-40a3-8cd3-d20f3434d7ab",
+      "draft_job_id": "8030bc44-77f6-4579-9238-c93343fed94b",
+      "model": "seedance_2_5",
+      "resolution": "4k",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_33vld0rG4YKak1BAYAmJDhJgTVg/hf_20261124_163457_0ddbefa9-bdb8-40a3-8cd3-d20f3434d7ab.mp4",
+      "bytes": 23643031,
+      "sha256": "6ef771797bdabf90ed41e1ae415d3b28c4a17dc58a2d7a70a096a95d60e3dee3",
+      "width": 3840,
+      "height": 2160,
+      "r_frame_rate": "24/1",
+      "duration": "6.041667",
+      "nb_frames": "145",
+      "frame_interpolation": null,
+      "normalization": {
+        "append_final_frames": 0,
+        "output_frames": 145,
+        "fps": 24
+      }
+    }
+  ]
 }

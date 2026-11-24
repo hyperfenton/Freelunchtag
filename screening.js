@@ -1,9 +1,9 @@
 import * as originalRoute from './scroll-route.mjs?v=walkthrough-1';
 import {mountFilmObjects, posterTimes as originalPosters} from './film-objects.mjs?v=editions-1';
-import {selectFilmQuality, filmFilename, filmPosterSources} from './film-quality.mjs?v=1';
+import {selectFilmQuality, filmFilename, filmPosterSources} from './film-quality.mjs?v=quality-3';
 
 const editionName=document.documentElement.dataset.film;
-const edition=editionName ? (await import('./alternate-films.mjs?v=quality-1')).configure(editionName) : null;
+const edition=editionName ? (await import('./alternate-films.mjs?v=quality-3')).configure(editionName) : null;
 const {chapters, fps, lastFrame, makeRoute, mapValue, sceneAt}=edition || originalRoute;
 const posterTimes=edition?.posterTimes || originalPosters;
 const byId=id=>document.getElementById(id);
@@ -42,6 +42,12 @@ const openingTransfer=responsiveMedia ? new Promise(resolve=>{
   if(photo.complete)finish();
   else{photo.addEventListener('load',finish,{once:true});photo.addEventListener('error',finish,{once:true});}
 }) : null;
+// Let the high-priority photograph finish and reach the screen before a large
+// movie competes for bandwidth. Reuse this gate for later quality changes.
+const openingPaint=responsiveMedia ? openingTransfer.then(async()=>{
+  try{await photo.decode();}catch{}
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+}) : Promise.resolve();
 
 const currentPreference=()=>!wide.matches&&qualityPreference==='4k'?'auto':qualityPreference;
 function qualityMessage(){
@@ -75,10 +81,10 @@ function attachMovie(name,quality='',isWide=wide.matches){
 }
 function armQualityWatchdog(){
   clearTimeout(qualityWatchdog);
-  if(activeQuality!=='4k'||motionOff()||dialogsOpen()||document.hidden||cinema.classList.contains('on-film'))return;
+  if(activeQuality!=='4k'||motionOff()||dialogsOpen()||document.hidden||ready&&film.readyState>=2)return;
   const expected=sourceName;
   qualityWatchdog=setTimeout(()=>{
-    if(sourceName===expected&&!motionOff()&&!dialogsOpen()&&!document.hidden&&!cinema.classList.contains('on-film'))lowerQuality();
+    if(sourceName===expected&&!motionOff()&&!dialogsOpen()&&!document.hidden&&!(ready&&film.readyState>=2))lowerQuality();
   },5000);
 }
 function lowerQuality(){
@@ -147,7 +153,8 @@ function chooseFile(){
     }));
   }
   qualityMessage();
-  qualitySelections.get(key).then(selection=>{
+  qualitySelections.get(key).then(async selection=>{
+    await openingPaint;
     if(version!==selectionVersion)return;
     pendingQualityKey='';
     if(isWide!==wide.matches||preference!==currentPreference()||motionOff()||dialogsOpen()){qualityMessage();return;}
@@ -162,6 +169,7 @@ function posterAt(t){
 }
 function reveal(){
   if(responsiveMedia&&sourceWide!==wide.matches)return;
+  if(responsiveMedia&&!watching&&wanted===0){posterAt(0);return;}
   if((watching||Math.abs(film.currentTime-wanted)<.5/fps||cinema.classList.contains('on-film'))&&ready&&!motionOff()&&!unavailable&&film.readyState>=2){
     cinema.classList.add('on-film');objects.show(film.currentTime);
     clearTimeout(qualityWatchdog);
@@ -181,7 +189,7 @@ function render(now){
     if(playbackEnd!==null && film.currentTime>=playbackEnd){
       const end=playbackEnd;stopWatching();jumpToFrame(end);return;
     }
-    wanted=frameTime(film.currentTime);setScene(wanted);
+    wanted=frameTime(film.currentTime);setScene(wanted);reveal();
     ownPosition(mapValue(route,wanted,true));schedule();return;
   }
   if(motionOff()||unavailable){posterAt(wanted);return;}
@@ -290,7 +298,7 @@ film.addEventListener('loadedmetadata',()=>{
   }
   schedule();
 });
-film.addEventListener('loadeddata',()=>{schedule();reveal();});
+film.addEventListener('loadeddata',()=>{clearTimeout(qualityWatchdog);schedule();reveal();});
 film.addEventListener('seeked',()=>{
   // A seek from the previous orientation can complete after a poster takes over.
   if(motionOff()||unavailable||!ready||responsiveMedia&&sourceWide!==wide.matches)return;
@@ -333,13 +341,46 @@ function resize(){
   if(!watching)followScroll();
 }
 wide.addEventListener('change',()=>{resize();chooseFile();});addEventListener('resize',resize);
+// Keep clipped headings and prose available to assistive technology, while
+// removing only their controls from sequential keyboard navigation. The saved
+// value travels with clones; moved controls remain programmatically focusable.
+function manageClippedFocus(){
+  const marker='data-film-tabindex';
+  const controls='a[href],area[href],button,input,select,textarea,summary,iframe,object,embed,audio[controls],video[controls],[contenteditable]:not([contenteditable="false"]),[tabindex],['+marker+']';
+  const update=node=>{
+    if(node.closest('body>main,body>footer')){
+      if(!node.hasAttribute(marker))node.setAttribute(marker,JSON.stringify(node.getAttribute('tabindex')));
+      node.setAttribute('tabindex','-1');
+    }else if(node.hasAttribute(marker)){
+      const previous=JSON.parse(node.getAttribute(marker));
+      if(previous===null)node.removeAttribute('tabindex');
+      else node.setAttribute('tabindex',previous);
+      node.removeAttribute(marker);
+    }
+  };
+  const visit=node=>{
+    if(node.nodeType!==1||!node.isConnected)return;
+    if(node.matches(controls))update(node);
+    node.querySelectorAll(controls).forEach(update);
+  };
+  visit(document.body);
+  // Attribute changes above are deliberately not observed, avoiding loops.
+  new MutationObserver(records=>{
+    for(const record of records)for(const node of record.addedNodes)visit(node);
+  }).observe(document.body,{childList:true,subtree:true});
+}
 function moveHere(node){
   if(!node)return;
   const slot=document.createComment('scene detail in original page flow');
   node.before(slot);content.append(node);relocated={node,slot};
 }
 function copyElements(selector){
-  document.querySelectorAll(selector).forEach(n=>content.append(n.cloneNode(true)));
+  document.querySelectorAll(selector).forEach(n=>{
+    const copy=n.cloneNode(true);
+    // Footer clipping must not follow the credits into this dialog.
+    if(n.matches('footer .credits'))copy.classList.remove('credits');
+    content.append(copy);
+  });
 }
 let sceneReturn;
 function sceneDetails(id=chapters[selected].id, trigger=options.querySelector('summary')){
@@ -451,6 +492,7 @@ function followHash(){
 }
 for(const chapter of chapters)byId(chapter.id).style.setProperty('--travel',chapter.span+'svh');
 root.classList.add('projecting');
+manageClippedFocus();
 measure();wanted=frameTime(mapValue(route,scrollY));setScene(wanted);showPoster(selected,wanted);
 addEventListener('hashchange',followHash);
 if(location.hash)followHash();

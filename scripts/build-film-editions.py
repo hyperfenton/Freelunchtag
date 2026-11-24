@@ -1,5 +1,8 @@
 """Build the selected homepage, its aliases, and the saved alternate films."""
+from html import escape
+import json
 from pathlib import Path
+import re
 
 ROOT=Path(__file__).resolve().parents[1]
 ARCHIVE_META='<meta name="robots" content="noindex, follow">\n'
@@ -19,9 +22,9 @@ EDITIONS = {
     },
     'pass-the-salsa': {
         'name': 'Someone gave you a tag', 'path': 'your-tag', 'color': '#fff4d8',
-        'page_title': 'Someone gave you a Free Lunch Tag', 'cue': 'See how lunch works', 'revision': 'quality-1',
+        'page_title': 'Free Lunch Tag | Meadows Baptist Church in Plano', 'cue': 'See how lunch works', 'revision': 'quality-3',
         'title': 'Someone gave you a <em>Free Lunch Tag.</em>',
-        'description': 'Someone gave you a Free Lunch Tag. Your Meadows host buys lunch. Scan the tag or enter its code to meet your host and make a plan.',
+        'description': 'Your lunch invitation from Meadows Baptist Church in Plano, Texas. Scan your Free Lunch Tag or enter its code to find your host and make a plan.',
         'alt': 'A Classic Lightning keychain clips to a bag at the taco window. The bag reads “Someone gave you a Free Lunch Tag. Your Meadows host buys lunch.”'
     }
 }
@@ -46,7 +49,7 @@ def build():
         html=html.replace('https://freelunchtag.com/"','https://freelunchtag.com/'+path+'.html"')
         html=html.replace('assets/film/film-lift','assets/'+cut+'/film-offer').replace('.webp?v=walkthrough-1',f'.webp?v={revision}')
         html=html.replace('#120d25',settings['color'])
-        html=html.replace('<link rel="preload" as="font"', '<link rel="stylesheet" href="film-editions.css?v=quality-1">\n<link rel="preload" as="font"')
+        html=html.replace('<link rel="preload" as="font"', '<link rel="stylesheet" href="film-editions.css?v=quality-3">\n<link rel="preload" as="font"')
         html=html.replace('How lunch works</button>','Lunch guide</button>')
         html=html.replace('<button type="button" id="readScene"', '<button type="button" id="tableTalk" aria-haspopup="dialog">Draw a table question</button>\n      <button type="button" id="readScene"')
         html=html.replace('Scroll to follow the glass', settings['cue'])
@@ -63,6 +66,49 @@ def build():
         html=html.replace('<div class="opening">','<div class="opening">\n        <noscript><img class="no-script-film" src="assets/'+cut+'/film-offer.webp?v='+revision+'" alt="'+settings['alt']+'"></noscript>')
         if cut=='pass-the-salsa':
             album=f'assets/{cut}/'
+            home='https://freelunchtag.com/'
+            church='https://www.meadowsbaptist.org/'
+            social_image=f'{home}{album}film-offer-wide.webp?v={revision}'
+            image_alt='A Free Lunch Tag clipped to a takeout bag at a taco window.'
+            metadata=[
+                ('property','og:site_name','Free Lunch Tag'),
+                ('property','og:locale','en_US'),
+                ('property','og:image:type','image/webp'),
+                ('property','og:image:width','1920'),
+                ('property','og:image:height','1080'),
+                ('property','og:image:alt',image_alt),
+                ('name','twitter:title',page_title),
+                ('name','twitter:description',description),
+                ('name','twitter:image',social_image),
+                ('name','twitter:image:alt',image_alt),
+            ]
+            extra_meta='\n'.join(f'<meta {kind}="{key}" content="{escape(value,quote=True)}">' for kind,key,value in metadata)
+            html=html.replace('<meta name="twitter:card" content="summary_large_image">', '<meta name="twitter:card" content="summary_large_image">\n'+extra_meta)
+            organization_id=church+'#organization'
+            website_id=home+'#website'
+            schema={'@context':'https://schema.org','@graph':[
+                {'@type':'WebSite','@id':website_id,'url':home,'name':'Free Lunch Tag',
+                 'alternateName':'FreeLunchTag.com','description':description,'inLanguage':'en-US',
+                 'publisher':{'@id':organization_id}},
+                {'@type':'WebPage','@id':home+'#webpage','url':home,'name':page_title,
+                 'description':description,'inLanguage':'en-US','isPartOf':{'@id':website_id},
+                 'publisher':{'@id':organization_id},
+                 'primaryImageOfPage':{'@type':'ImageObject','url':social_image,
+                                       'width':1920,'height':1080}},
+                {'@type':'Organization','@id':organization_id,'name':'Meadows Baptist Church','url':church,
+                 'logo':{'@type':'ImageObject','url':home+'assets/meadows-mark.png',
+                         'contentUrl':home+'assets/meadows-mark.png','width':787,'height':900}},
+            ]}
+            schema_tag='<script type="application/ld+json">'+json.dumps(schema,ensure_ascii=False,separators=(',',':'))+'</script>'
+            html=re.sub(r'<script type="application/ld\+json">.*?</script>',lambda _:schema_tag,html,count=1,flags=re.S)
+            maker_credit='''<a class="maker-credit" href="https://www.meadowsbaptist.org/" aria-label="Made by Meadows Baptist Church. Visit Meadowsbaptist.org."><img src="assets/meadows-mark.png" width="28" height="32" alt=""><span class="maker-copy"><span class="maker-kicker">Made by</span><strong>Meadows Baptist Church</strong></span></a>'''
+            html=html.replace('<header class="film-tools">', maker_credit+'\n<header class="film-tools">')
+            guide_credit='''        <a class="guide-maker" href="https://www.meadowsbaptist.org/"><img src="assets/meadows-mark.png" width="36" height="42" alt=""><span>Free Lunch Tag was created by <strong>Meadows Baptist Church</strong> in Plano, Texas.<span class="church-domain">Meadowsbaptist.org</span></span></a>
+'''
+            html=html.replace('      </div>\n      <div class="demonstration"', guide_credit+'      </div>\n      <div class="demonstration"')
+            html=html.replace('<p>Made with love<br><em>by Meadows.</em></p>', '<p><a href="https://www.meadowsbaptist.org/">Made with love<br><em>by Meadows Baptist Church.</em></a></p>')
+            html=html.replace('<div class="credits"><a href="https://www.meadowsbaptist.org">Meadows Baptist Church, Plano</a>', '<div class="credits">Created by <a href="https://www.meadowsbaptist.org/">Meadows Baptist Church</a> in Plano, Texas')
+            html=html.replace('src="assets/meadows-logo.png"', 'src="assets/meadows-mark.png"')
             wide_sources=', '.join(f'{album}film-offer{suffix}.webp?v={revision} {width}w' for suffix,width in [('-wide-720',1280),('-wide',1920),('-wide-4k',3840)])
             phone_sources=', '.join(f'{album}film-offer{suffix}.webp?v={revision} {width}w' for suffix,width in [('-720',720),('',1080)])
             html=html.replace(f'srcset="{album}film-offer-wide.webp?v={revision}"', f'srcset="{wide_sources}" sizes="100vw"')

@@ -3,12 +3,12 @@
   "short_name": "Free Lunch Tag",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#faf7f0",
-  "theme_color": "#faf7f0",
+  "background_color": "#fff4d8",
+  "theme_color": "#fff4d8",
   "icons": [
     {
       "src": "LOGO.PNG",
-      "sizes": "512x512",
+      "sizes": "300x300",
       "type": "image/png"
     }
   ]

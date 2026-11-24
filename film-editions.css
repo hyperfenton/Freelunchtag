@@ -40,6 +40,25 @@ html[data-film="pass-the-salsa"]{--paper:#fff4d8;--ink:#1b3424;--ring:#ab401a}
 /* Touch screens have no hover. Place each invitation above its bottle cap. */
 [data-object="pass-the-salsa-mild"] .film-pin-label,[data-object="pass-the-salsa-hot"] .film-pin-label{opacity:1;left:50%;right:auto;bottom:calc(100% + 4px);transform:translateX(-50%);background:#fff5dc;color:#243b2a;box-shadow:0 1px 3px #302a2060}
 
+/* Keep the selected film free of markers while preserving accessible objects. */
+[data-film="pass-the-salsa"] .film-pin,[data-film="pass-the-salsa"] .film-pin-label{display:none}
+[data-film="pass-the-salsa"] .film-object:focus-visible{outline:3px solid #fff9e8;outline-offset:-4px;box-shadow:inset 0 0 0 6px #204c36}
+
+[data-film="pass-the-salsa"]{--film-left:max(10px,env(safe-area-inset-left));--film-right:max(10px,env(safe-area-inset-right))}
+[data-film="pass-the-salsa"] .maker-credit{display:inline-flex;align-items:center;gap:8px;min-height:44px;max-width:250px;margin:12px;padding:7px 9px;border:1px solid #344c2f4f;border-radius:11px;background:#fff6e4f5;color:#213a2b;box-shadow:0 1px 5px #2222;text-decoration:none}
+[data-film="pass-the-salsa"].projecting .maker-credit{position:fixed;left:var(--film-left);top:max(12px,env(safe-area-inset-top));z-index:5;max-width:min(250px,calc(100vw - var(--film-left) - var(--film-right) - 146px));margin:0}
+[data-film="pass-the-salsa"] .maker-credit img{flex:0 0 28px;display:block;width:28px;height:32px;object-fit:contain}
+[data-film="pass-the-salsa"] .maker-copy{display:grid;gap:2px;min-width:0}
+[data-film="pass-the-salsa"] .maker-kicker{font-size:.75rem;line-height:1.1}
+[data-film="pass-the-salsa"] .maker-copy strong{font-size:.875rem;line-height:1.15;font-weight:650}
+[data-film="pass-the-salsa"] .maker-credit:hover{background:#fffaf0}
+[data-film="pass-the-salsa"].projecting .film-tools{right:var(--film-right);gap:6px}
+[data-film="pass-the-salsa"] #invitationGuide{padding-inline:12px}
+[data-film="pass-the-salsa"] .guide-maker{display:flex;align-items:flex-start;gap:12px;margin-top:18px;padding-top:18px;border-top:1px solid #bda97d70;color:inherit;text-decoration:none;font-size:1rem;line-height:1.45}
+[data-film="pass-the-salsa"] .guide-maker img{flex:0 0 36px;display:block;width:36px;height:42px;object-fit:contain}
+[data-film="pass-the-salsa"] .church-domain{display:block;margin-top:5px;font-size:.9rem;text-decoration:underline;text-underline-offset:.22em}
+@media(max-width:360px){[data-film="pass-the-salsa"] .maker-credit{gap:6px;padding-inline:7px}[data-film="pass-the-salsa"] .maker-credit img{flex-basis:24px;width:24px;height:28px}}
+
 .film-tools .tool-list{max-height:calc(100dvh - 82px);overflow-y:auto;overscroll-behavior:contain}
 .film-quality{display:grid;grid-template-columns:1fr 100px;align-items:center;gap:6px;margin:6px 4px 2px;padding:10px 8px 4px;border-top:1px solid #243b2a30}
 .film-quality label{font-size:.875rem;font-weight:650}
