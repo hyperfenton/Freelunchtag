@@ -22,6 +22,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 from scipy.interpolate import PchipInterpolator
 from scipy.spatial import ConvexHull
+from scipy.ndimage import binary_closing, binary_fill_holes, distance_transform_edt
 from lime_surface import RigidLimeTurn
 
 
@@ -96,6 +97,57 @@ def frames(path, width, select=None):
             process.wait()
 
 
+def clean_tag_fringe(result, original, transform, scale, frame, front_slope,
+                     counter_left, counter_front, native_lime=None):
+    if not 100 <= frame <= 131:
+        return result
+    # Coordinates are relative to the clean source135 tag, not the paper plane.
+    corners = np.array([[265, 490], [390, 460], [390, 502], [265, 532]], float)
+    mapped = np.c_[corners * scale, np.ones(4)] @ transform.T
+    mapped = mapped[:, :2] / mapped[:, 2:]
+    x0 = max(0, math.floor(mapped[:, 0].min()) - 8)
+    y0 = max(0, math.floor(mapped[:, 1].min()) - 8)
+    x1 = min(result.width, math.ceil(mapped[:, 0].max()) + 8)
+    y1 = min(result.height, math.ceil(mapped[:, 1].max()) + 8)
+    if x1 <= x0 or y1 <= y0:
+        return result
+    yy, xx = np.mgrid[y0:y1, x0:x1]
+    inv = np.linalg.inv(transform)
+    q = np.stack([xx, yy, np.ones_like(xx)], axis=-1) @ inv.T
+    u, v = q[..., 0] / q[..., 2] / scale, q[..., 1] / q[..., 2] / scale
+    bottom = 500 - (u - 274) * (24 / 107)
+    band = (u >= 265) & (u <= 390) & (v >= bottom - 4) & (v <= bottom + 24)
+    # Prevent any wood sample from crossing the front fascia or the arriving lime.
+    front = counter_front + front_slope * (xx / scale - counter_left)
+    band &= yy / scale < front - 1
+    if native_lime is not None:
+        lx, ly, lr = native_lime
+        band &= ((xx / scale - lx) / (lr + 8)) ** 2 + ((yy / scale - ly) / (lr + 8)) ** 2 > 1
+    rgb = np.asarray(original.crop((x0, y0, x1, y1)), dtype=np.float32)
+    red, green, blue = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    cyan = (blue > red * 1.10) & (blue > 65) & (blue - red > 18)
+    rim = (red - green > 65) & (red - blue > 40) & (blue > green * .65)
+    seed = (cyan | rim) & band
+    if not seed.any():
+        return result
+    # Close the silhouette; do not leave black outline holes between color samples.
+    close_n = max(1, round(1.5 * scale))
+    yy_k, xx_k = np.mgrid[-close_n:close_n+1, -close_n:close_n+1]
+    disk = xx_k**2 + yy_k**2 <= close_n**2
+    mask = binary_closing(seed, structure=disk)
+    mask = binary_fill_holes(mask)
+    expand_n = max(1, round(8 * scale))
+    mask = (distance_transform_edt(~mask) <= expand_n) & band
+    alpha = Image.fromarray((mask * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(1.5 * scale))
+    dx, dy = 30 * scale, (20 + 30 * front_slope) * scale
+    donor = original.transform((x1-x0, y1-y0), Image.Transform.AFFINE,
+                               (1, 0, x0+dx, 0, 1, y0+dy), Image.Resampling.BICUBIC)
+    local = Image.composite(donor, result.crop((x0, y0, x1, y1)), alpha)
+    out = result.copy()
+    out.paste(local, (x0, y0))
+    return out
+
+
 class Repair:
     def __init__(self, source99, source135, params):
         self.p = params
@@ -118,7 +170,7 @@ class Repair:
         rim[xx/s>470]=0
         self.arrival_lime_rim=Image.fromarray(rim).filter(ImageFilter.GaussianBlur(1.2*s))
         self.paper_mask = shape_mask(self.size, [("polygon", [(329,62),(635,62),(650,383),(326,383)])], s, .8)
-        self.base_mask = shape_mask(self.size, [("polygon", [(326,378),(650,378),(675,472),(333,477)])], s, 1.2)
+        self.base_mask = shape_mask(self.size, [("polygon", [(326,383),(650,383),(675,472),(333,477)])], s, 1.2)
         # Remove the duplicate from its two distinct backing surfaces.
         self.empty = clone_patch(source135, (417,390,572,474), (560,390,645,474), s)
         self.empty = clone_patch(self.empty, (415,474,675,540), (690,474,950,540), s)
@@ -135,6 +187,12 @@ class Repair:
         ring = shape_mask(self.size, [("polygon", [(305,269),(330,273),(337,286),(329,307),(315,331),(292,347),(277,340),(278,326),(289,300)])], s, .6)
         inner = shape_mask(self.size, [("polygon", [(306,279),(323,282),(326,292),(317,310),(306,326),(292,337),(284,331),(287,320),(298,296)])], s, .6)
         self.tag_mask = Image.fromarray(np.maximum(np.asarray(self.tag_mask), np.maximum(np.asarray(ring,dtype=int)-np.asarray(inner,dtype=int),0)).astype("uint8"))
+        # Preserve the photographed orange plane, stripe and tag shadow wherever
+        # the clean reference exposes them. Reconstruction is only needed under
+        # its tag/lime footprints; rectangular clone boundaries stay covered.
+        occluders=Image.fromarray(np.maximum(np.asarray(self.tag_mask),np.asarray(self.arrival_lime_mask)))
+        occluders=occluders.filter(ImageFilter.MaxFilter(2*round(2*s)+1)).filter(ImageFilter.GaussianBlur(.7*s))
+        self.clean_base_mask=Image.fromarray(np.minimum(np.asarray(self.base_mask),255-np.asarray(occluders)))
         # Wheel backing plate is separate from both wooden surfaces.
         self.wheel = clone_patch(source99, (315,385,401,540), (617,385,703,540), s)
         geometry = params["wheel_geometry"]
@@ -244,8 +302,6 @@ class Repair:
 
         # Stabilize lettering using the existing paper and orange front plane.
         result = overlay(result, plate, warp(self.paper_mask, H, self.size))
-        base_alpha=np.minimum(np.asarray(warp(self.base_mask,H,self.size)),255-protect)
-        result = overlay(result, empty,Image.fromarray(base_alpha))
         # Tag gets its own rigid similarity track, independent of the paper.
         neck_x, neck_y, bottom_x, bottom_y = track(self.p["tag_pose"], frame)
         v0 = np.array([20.,151.]); v1 = np.array([bottom_x-neck_x,bottom_y-neck_y])
@@ -254,6 +310,13 @@ class Repair:
         a,b = scale*math.cos(angle), scale*math.sin(angle)
         tx = neck_x-(a*305-b*338); ty = neck_y-(b*305+a*338)
         T = np.array([[a,-b,tx*s],[b,a,ty*s],[0,0,1]])
+        result=clean_tag_fringe(result,original,T,s,frame,front_slope,left,front,
+                                track(self.p["duplicate_lime"],frame) if frame>=self.p["landing"] else None)
+        # The orange base occludes the tabletop fringe cleanup.
+        base_alpha=np.minimum(np.asarray(warp(self.base_mask,H,self.size)),255-protect)
+        result = overlay(result, empty,Image.fromarray(base_alpha))
+        clean_base_alpha=np.minimum(np.asarray(warp(self.clean_base_mask,H,self.size)),255-protect)
+        result=overlay(result,plate,Image.fromarray(clean_base_alpha))
         result = overlay(result, warp(self.arrival,T,self.size), warp(self.tag_mask,T,self.size))
 
         if arrival_transform is not None:

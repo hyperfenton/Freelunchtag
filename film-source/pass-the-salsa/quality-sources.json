@@ -5,7 +5,7 @@
   "aspect_ratio": "auto",
   "enhancement": "default",
   "frame_interpolation": null,
-  "notes": "The eight enhanced original takes are retained as photograph sources and portrait motion. Three reviewed replacement desktop camera takes remain. The first desktop move reuses the original enhanced take with a reproducible local repair. Prototype v7 is approved for the4K stage build; delivered4K review remains a publication gate. No optical-flow interpolation or source motion retiming is used.",
+  "notes": "The eight enhanced original takes are retained as photograph sources and portrait motion. Three reviewed replacement desktop camera takes remain. The first desktop move reuses the original enhanced take with a reproducible local repair. Native 4K boundary corrections have passed visual review; the final compressed delivery is the remaining publication gate. No optical-flow interpolation or source motion retiming is used.",
   "sources": [
     {
       "path": "wide/00.mp4",
@@ -147,7 +147,7 @@
       }
     ],
     "wide_holds": "Original enhanced photographs at the hold-24 poster composition with a shared 2% center crop, held stationary.",
-    "wide_transitions": "The original enhanced first camera move with a local lime repair, followed by three previously reviewed camera moves. All are delivered at3840x2160 and24fps.",
+    "wide_transitions": "The original enhanced first camera move with a local lime repair, followed by three previously reviewed camera moves. All are delivered at 3840x2160 and 24 fps.",
     "portrait_transitions": "Original enhanced portrait camera takes with reviewed defect intervals removed using clean editorial cuts.",
     "output_frames": 866,
     "fps": 24,
@@ -190,7 +190,7 @@
     "source_review": {
       "date": "2026-11-24",
       "previous_release_desktop_4k_frames_reviewed": 436,
-      "opening_repair_status": "v7 accepted at960x540;4K staging export pending",
+      "opening_repair_status": "Continuous original lime motion accepted in compressed 4K; subsequent localized sign-base and tag-edge cleanup accepted in native 4K before final encoding.",
       "review_scope": [
         "single lime identity and continuous jump",
         "table contact and shadow",
@@ -199,7 +199,7 @@
         "entry and exit framing",
         "compressed4K delivery"
       ],
-      "result": "Prototype motion review passed. Publication waits for the focused native4K and compressed delivery checks."
+      "result": "Motion, contact, rim, wood and joins passed compressed 4K review. Final native 4K cleanup passed for source frames 112, 120 and 131, including the join to native frame 132. Final compressed cleanup verification remains pending."
     }
   },
   "motion_overrides": [
@@ -330,7 +330,27 @@
         135
       ],
       "same_frame_clean_donors": true,
-      "new_generation_jobs": false
+      "new_generation_jobs": false,
+      "native_boundary_review": {
+        "version": "v8",
+        "width": 3840,
+        "height": 2160,
+        "source_frames": [
+          112,
+          120,
+          131,
+          132
+        ],
+        "result": "accepted",
+        "date": "2026-11-24",
+        "scope": [
+          "preserved photographed sign base and cast shadow",
+          "removed the old tag lower-edge fringe",
+          "kept the tabletop behind the sign and tag",
+          "removed the pale bevel overwrite"
+        ],
+        "script_sha256": "1f7b4bb987ae683bb4ac1709f15a7fe2b2f99cc9cbf870233d7ef565fe793742"
+      }
     }
   ]
 }
