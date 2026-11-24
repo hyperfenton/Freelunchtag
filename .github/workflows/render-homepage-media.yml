@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      QUALITY_SOURCE_DIR: ${{ runner.temp }}/homepage-quality-sources
+      QUALITY_SOURCE_DIR: /tmp/homepage-quality-sources
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
