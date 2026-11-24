@@ -4,7 +4,7 @@ import test from 'node:test';
 const load = file => readFile(new URL('../'+file,import.meta.url),'utf8');
 const page=await load('index.html');
 
-test('the film retains the original guest journey and its two welcome shortcuts',()=>{
+test('the homepage retains the guest journey and its two welcome shortcuts',()=>{
   const main=page.match(/<main>([\s\S]*?)<\/main>/)[1];
   const ids=[...main.matchAll(/<section\b[^>]*\bid="([^"]+)"/g)].map(m=>m[1]);
   assert.deepEqual(ids,['hero','lunch','hosts','how','video','story','why','claim','bonus']);
@@ -18,15 +18,23 @@ test('QR navigation strips the secret before resources or analytics load',()=>{
   assert.ok(capture>0 && strip>capture && strip<firstLink);
   assert.match(page.slice(capture,firstLink),/'#claim'/);
 });
-test('the primary visual is a local movie with photographic posters for both compositions',async()=>{
+test('the primary and saved original films retain local movies and posters for both compositions',async()=>{
   assert.match(page,/<video id="storyFilm" muted playsinline/);
   assert.doesNotMatch(page,/<canvas/);
+  const {configure}=await import('../alternate-films.mjs');
+  const primary=configure('pass-the-salsa');
+  const primaryFiles=Object.keys(primary.posterTimes).flatMap(name=>['','-wide'].map(suffix=>'film-'+name+suffix+'.webp'));
+  primaryFiles.push('free-lunch-portrait.mp4','free-lunch-wide.mp4');
+  for(const name of primaryFiles){
+    const info=await stat(new URL('../assets/pass-the-salsa/'+name,import.meta.url));
+    assert.ok(info.size>1024,name+' is present for the homepage');
+  }
   const images=['lift','shatter','emblem','floor','host','broom','toss','story','why','claim','visit','close'];
   const files=images.flatMap(name=>['','-wide'].map(suffix=>'film-'+name+suffix+'.webp'));
   files.push('free-lunch-portrait.mp4','free-lunch-wide.mp4');
   for(const name of files){
     const info=await stat(new URL('../assets/film/'+name,import.meta.url));
-    assert.ok(info.size>1024,name+' is present');
+    assert.ok(info.size>1024,name+' is present for the saved original');
   }
 });
 test('the side tag and printed QR use a single invitation form',()=>{
@@ -93,7 +101,7 @@ test('the guest guide and manual entry are reachable before exploring film objec
   assert.equal((page.match(/id="codeForm"/g)||[]).length,1);
 });
 
-test('each alternate cut has a shareable guest entry, five readable stops and reversible scroll',async()=>{
+test('each film edition retains its guest entry, five readable stops and reversible scroll',async()=>{
   const {chapters,configure,lastFrame,makeRoute,mapValue}=await import('../alternate-films.mjs');
   const tops=chapters.map((_,i)=>i*1000),end=tops.at(-1)+840;
   const route=makeRoute(tops,end);
@@ -108,7 +116,12 @@ test('each alternate cut has a shareable guest entry, five readable stops and re
     const entry=await load(path+'.html');
     const config=configure(cut);
     assert.ok(entry.includes('data-film="'+cut+'"'));
-    assert.ok(entry.includes('https://freelunchtag.com/'+path+'.html'));
+    const canonical=cut==='pass-the-salsa'?'https://freelunchtag.com/':'https://freelunchtag.com/'+path+'.html';
+    assert.ok(entry.includes('<link rel="canonical" href="'+canonical+'">'));
+    if(cut!=='pass-the-salsa'){
+      assert.match(entry,/<meta name="robots" content="noindex,\s*follow">/);
+      assert.match(entry,/href="original-film.html">Original film</);
+    }
     assert.ok(entry.indexOf('history.replaceState')<entry.indexOf('<link'));
     assert.equal((entry.match(/id="codeForm"/g)||[]).length,1);
     assert.ok(entry.includes('Can I bring someone?'));
@@ -144,12 +157,25 @@ test('the two salsa bottles open distinct question decks at the final reading st
   }
 });
 
-test('the invitation opens on the tag and previously shared links still open the same film',async()=>{
+test('the selected invitation is the homepage, old links remain usable and other designs are saved away',async()=>{
   const {configure}=await import('../alternate-films.mjs');
   const html=await load('your-tag.html');
+  assert.equal(page,html);
   assert.equal(await load('pass-the-salsa.html'),html);
   assert.match(html,/<title>Someone gave you a Free Lunch Tag<\/title>/);
+  assert.match(html,/<html lang="en" data-film="pass-the-salsa">/);
+  assert.match(html,/<link rel="canonical" href="https:\/\/freelunchtag.com\/">/);
+  assert.match(html,/<meta property="og:url" content="https:\/\/freelunchtag.com\/">/);
+  const schema=JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+  assert.equal(schema.url,'https://freelunchtag.com/');
   assert.doesNotMatch(html,/Pass the Salsa/i);
-  assert.match(await load('index.html'),/href="your-tag.html">Someone gave you a tag</);
+  const menu=html.match(/<div class="tool-list">([\s\S]*?)<\/div>/)[1];
+  assert.doesNotMatch(menu,/href="(?:found-tag|lunch-line|original-film|your-tag|pass-the-salsa)\.html"/);
+  assert.doesNotMatch(menu,/>Original film</);
+  const original=await load('original-film.html');
+  assert.match(original,/<meta name="robots" content="noindex,\s*follow">/);
+  assert.match(original,/<span>We want to<\/span> <span>buy you<\/span> <em>lunch!<\/em>/);
+  assert.match(original,/assets\/film\/film-lift-wide\.webp/);
+  assert.doesNotMatch(original,/<html[^>]*data-film=/);
   assert.equal(configure('pass-the-salsa').tracks[0].action,'lookup');
 });

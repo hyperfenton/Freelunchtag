@@ -1,7 +1,8 @@
-"""Build the alternate static film entry pages from the shared guest and host markup."""
+"""Build the selected homepage, its aliases, and the saved alternate films."""
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
+ARCHIVE_META='<meta name="robots" content="noindex, follow">\n'
 
 EDITIONS = {
     'found-tag': {
@@ -26,7 +27,11 @@ EDITIONS = {
 }
 
 def build():
-    page=(ROOT/'index.html').read_text()
+    # Keep the original film as the shared source so rebuilding never replaces
+    # an edition with a different edition's artwork or duplicates its controls.
+    page=(ROOT/'original-film.html').read_text()
+    page=page.replace(ARCHIVE_META, '')
+    page=page.replace('https://freelunchtag.com/original-film.html"', 'https://freelunchtag.com/"')
     for cut,settings in EDITIONS.items():
         name=settings['name']
         path=settings.get('path',cut)
@@ -45,7 +50,7 @@ def build():
         html=html.replace('How lunch works</button>','Lunch guide</button>')
         html=html.replace('<button type="button" id="readScene"', '<button type="button" id="tableTalk" aria-haspopup="dialog">Draw a table question</button>\n      <button type="button" id="readScene"')
         html=html.replace('Scroll to follow the glass', settings['cue'])
-        html=html.replace(f'<a href="{path}.html">{name}</a>', '<a href="/">Original film</a>')
+        html=html.replace(f'<a href="{path}.html">{name}</a>', '<a href="original-film.html">Original film</a>')
         html=html.replace('<span>We want to</span> <span>buy you</span> <em>lunch!</em>', settings['title'])
         html=html.replace('These are the people from Meadows inviting neighbors to lunch. Tap a name to say hello.', 'Your tag connects you to a real person from Meadows in Plano. You can read their introduction before making a plan.')
         html=html.replace('Someone from Meadows Baptist Church in Plano would love to share a meal with you. Your host picks up the tab.', 'Pizza, tacos, coffee. Your Meadows host covers your lunch. Pick a public spot together and meet someone new.')
@@ -61,6 +66,16 @@ def build():
             html=html.replace('Keep your tag on your bag', 'Keep your tag on your keys')
             html=html.replace('Draw a table question</button>', 'Mild or hot? Pick a question</button>')
             html=html.replace('Over lunch, tell your host you’d like to welcome someone to the table, too.', 'Tell your host you’d like to buy lunch for a neighbor next time.')
+            html=html.replace('https://freelunchtag.com/your-tag.html"', 'https://freelunchtag.com/"')
+            for link in [
+                '<a href="found-tag.html">Found Tag</a>',
+                '<a href="lunch-line.html">The Lunch Line</a>',
+                '<a href="original-film.html">Original film</a>',
+            ]:
+                html=html.replace('      '+link+'\n', '')
+            (ROOT/'index.html').write_text(html)
+        else:
+            html=html.replace('<meta charset="utf-8">\n', '<meta charset="utf-8">\n'+ARCHIVE_META)
         (ROOT/(path+'.html')).write_text(html)
         if path!=cut:
             # Preserve previously shared links, including QR fragments, on the same guest page.
