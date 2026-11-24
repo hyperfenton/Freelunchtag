@@ -15,11 +15,12 @@ frame interpolation, speed change, crossfade, or additional reframing.
 Use --source-override TAKE=PATH to replace only a reviewed, repaired take;
 overrides must already have the same 24 fps / 145-frame source timing. Reading
 holds and posters always use the photographs in --source-dir, even when a
-moving take is overridden. When all four wide takes are overridden, their
-keyframes are the approved hold-24 posters: reading photographs therefore stay
-at that poster crop with a shared 2% overscan. Reviewed whole-image scale and
-translation align the fresh moving takes to those photographs without exposing
-an image edge. There is no additional breathing zoom or lookup lens adjustment.
+moving take is overridden. When all four wide takes are overridden, reading
+photographs stay at the approved hold-24 poster crop with a shared 2% overscan.
+Reviewed whole-image scale and translation align the original opening and the
+three replacement camera takes to those photographs without exposing an image
+edge. There is no additional breathing zoom or lookup lens adjustment. Local
+source compositing is performed separately by the documented repair script.
 
 The previous five-photograph treatment remains available with --motion fixed.
 That archival mode selects only frame 0 of each take and frame 144 of take 03,
@@ -65,17 +66,16 @@ CAMERA_CUT_FRAMES = READING_FRAMES[1:]
 READING_BEFORE = Fraction(16, 100) * FPS
 READING_AFTER = Fraction(257, 100) * FPS
 MAX_ZOOM = 1.015
-# The four approved fresh wide takes were generated from the hold-24 posters.
-# Their eight enhanced endpoints share a small global framing offset. Each
-# take receives one CONSTANT uniform transform, averaged from its two endpoint
-# fits: (scale, horizontal translation / width, vertical translation / height).
+# The original first wide take and three replacement takes each receive one
+# CONSTANT uniform transform, averaged from their two endpoint fits:
+# (scale, horizontal translation / width, vertical translation / height).
 # A common 2% overscan on both photographs and motion provides genuine image
 # pixels around the translated edges. No transform changes during a take, and
 # no individual object is warped. These values apply only to all-four-wide
 # override exports; original/partial source exports and portrait are unchanged.
 WIDE_POSTER_OVERSCAN = 1.02
 WIDE_MOTION_ALIGNMENT = (
-    (1.01884, .00929, .01673),
+    (1.00593465, -.00000032, -.00006128),
     (1.01879, .00909, .01699),
     (1.01859, .00902, .01681),
     (1.01946, .00842, .01613),

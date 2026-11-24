@@ -1,9 +1,9 @@
 import * as originalRoute from './scroll-route.mjs?v=walkthrough-1';
 import {mountFilmObjects, posterTimes as originalPosters} from './film-objects.mjs?v=editions-1';
-import {selectFilmQuality, filmFilename, filmPosterSources} from './film-quality.mjs?v=quality-3';
+import {selectFilmQuality, filmFilename, filmPosterSources} from './film-quality.mjs?v=quality-5';
 
 const editionName=document.documentElement.dataset.film;
-const edition=editionName ? (await import('./alternate-films.mjs?v=quality-3')).configure(editionName) : null;
+const edition=editionName ? (await import('./alternate-films.mjs?v=quality-5')).configure(editionName) : null;
 const {chapters, fps, lastFrame, makeRoute, mapValue, sceneAt}=edition || originalRoute;
 const posterTimes=edition?.posterTimes || originalPosters;
 const byId=id=>document.getElementById(id);
@@ -16,6 +16,8 @@ const quick=byId('quickTag'), watch=byId('watchFilm'), cue=byId('scrollCue');
 const wide=matchMedia('(min-aspect-ratio:1/1)'), reduce=matchMedia('(prefers-reduced-motion:reduce)');
 const album=edition?.album || 'assets/film/', revision=edition?.revision || '?v=walkthrough-1';
 const responsiveMedia=edition?.responsiveMedia===true;
+const openingMotionTime=()=>!wide.matches
+  ? edition?.portraitOpeningMotionStart??edition?.openingMotionStart : edition?.openingMotionStart;
 const qualityControl=byId('filmQuality'), qualityStatus=byId('filmQualityStatus');
 const dialogsOpen=()=>Boolean(document.querySelector('dialog[open]'));
 const motionOff=()=>reduce.matches||root.dataset.motion==='off'||navigator.connection?.saveData===true;
@@ -98,7 +100,7 @@ function lowerQuality(){
 function measure(){
   objects.measure(wide.matches,getComputedStyle(film).objectFit);
   const last=Math.max(1,root.scrollHeight-innerHeight);
-  route=makeRoute(chapters.map(ch=>byId(ch.id).getBoundingClientRect().top+scrollY),last);
+  route=makeRoute(chapters.map(ch=>byId(ch.id).getBoundingClientRect().top+scrollY),last,{portrait:!wide.matches});
 }
 function stillAt(i,t){
   return !edition && chapters[i].id==='made-with-love' && t<33.2 ? 'visit' : chapters[i].still;
@@ -116,7 +118,11 @@ function showPoster(i,t){
 }
 function setScene(t){
   const i=sceneAt(t);
-  const opening=t<.55,end=t>=lastFrame-.08;
+  const motionStart=openingMotionTime();
+  const opening=motionStart!==undefined
+    ? t<motionStart+.25||!cinema.classList.contains('on-film')&&stillAt(i,t)==='offer'
+    : t<.55;
+  const end=t>=lastFrame-.08;
   cue.hidden=!opening&&!end;
   cue.textContent=end?(edition?.replay || 'Back to the table'):(edition?.cue || 'Scroll to follow the glass');
   if(i!==selected){
@@ -202,7 +208,10 @@ function render(now){
   previousFrame=now;
   let step=Math.max(1/fps,Math.abs(delta)*(1-Math.exp(-dt/46)));
   step=Math.min(step,Math.abs(delta));
-  const dest=frameTime(film.currentTime+Math.sign(delta)*step);
+  const motionStart=openingMotionTime();
+  const skipOpening=motionStart!==undefined&&
+    (wanted===0||film.currentTime<motionStart&&wanted>=motionStart);
+  const dest=skipOpening?wanted:frameTime(film.currentTime+Math.sign(delta)*step);
   try{seekStarted=performance.now();film.currentTime=dest;}catch{schedule();}
 }
 function followScroll(){
@@ -212,6 +221,12 @@ function followScroll(){
     stopWatching();
   }
   wanted=frameTime(mapValue(route,scrollY));
+  if(edition?.openingMotionStart!==undefined&&wanted===0){
+    posterAt(0);
+    if(!motionOff()&&!unavailable&&ready&&film.currentTime!==0){
+      try{seekStarted=performance.now();film.currentTime=0;}catch{}
+    }
+  }
   if(motionOff()||unavailable){posterAt(wanted);return;}
   chooseFile();schedule();
 }
@@ -268,6 +283,7 @@ function watchFilm(){
   if(!ready||unavailable||pendingQualityKey)return;
   watching=true;watch.textContent='Return to scrolling';
   if(wanted>=lastFrame-.1){film.currentTime=0;wanted=0;ownPosition(0);}
+  else if(edition?.openingMotionStart!==undefined&&wanted===0&&film.currentTime!==0)film.currentTime=0;
   film.play().then(schedule).catch(()=>{stopWatching();followScroll();});
 }
 function requestChapter(i,atStart=false){
@@ -287,9 +303,15 @@ nextButton.addEventListener('click',()=>{
   scrollTo({top:mapValue(route,stop,true),behavior:motionOff()?'instant':'smooth'});
 });
 addEventListener('scroll',followScroll,{passive:true});
-for(const type of ['wheel','touchstart'])addEventListener(type,()=>{if(watching&&!dialogsOpen())stopWatching();},{passive:true});
+function interruptPlayback(){
+  if(watching&&!dialogsOpen()){
+    stopWatching();
+    if(edition?.openingMotionStart!==undefined)followScroll();
+  }
+}
+for(const type of ['wheel','touchstart'])addEventListener(type,interruptPlayback,{passive:true});
 addEventListener('keydown',e=>{
-  if(watching&&!dialogsOpen()&&['PageDown','PageUp','ArrowDown','ArrowUp','Home','End'].includes(e.key))stopWatching();
+  if(['PageDown','PageUp','ArrowDown','ArrowUp','Home','End'].includes(e.key))interruptPlayback();
 });
 film.addEventListener('loadedmetadata',()=>{
   ready=true;previousFrame=0;qualityMessage();

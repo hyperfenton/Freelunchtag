@@ -3,7 +3,12 @@
 import {mapValue} from './scroll-route.mjs?v=walkthrough-1';
 export {mapValue};
 export const fps=24;
-export const lastFrame=(4*144 + 5*58 - 1)/fps;
+const holdFrames=58;
+// The original takes reach camera travel at wide source 40 / portrait source 33.
+// Source frame 1 follows the 58-frame reading hold at output frame 58.
+export const openingMotionStart=(holdFrames+39)/fps;
+export const portraitOpeningMotionStart=(holdFrames+32)/fps;
+export const lastFrame=(4*144 + 5*holdFrames - 1)/fps;
 const readings=[0, 202/24, 404/24, 606/24, 808/24];
 const shots=['offer','lookup','text','swap','close'];
 export const posterTimes=Object.fromEntries(shots.map((name,i)=>[name,readings[i]+1]));
@@ -14,6 +19,7 @@ export const chapters=[
   ['why',19.8,21.6,'text',72],['claim',22.8,24,'swap',70],
   ['bonus',24.85,26.25,'swap',161],['made-with-love',30.4,34.7,'close',180]
 ].map(([id,start,read,still,span])=>({id,start,read,still,span}));
+const invitationChapters=chapters.map((chapter,index)=>index===0?{...chapter,span:50}:chapter);
 export function sceneAt(t){let i=0;while(i+1<chapters.length && t>=chapters[i+1].start)i++;return i;}
 export function makeRoute(tops,end){
   const route=[];
@@ -29,6 +35,24 @@ export function makeRoute(tops,end){
   }
   route.push([end,lastFrame]);
   return route;
+}
+function makeInvitationRoute(tops,end,{portrait=false}={}){
+  const route=makeRoute(tops,end),start=tops[0];
+  const travel=Math.min(100,(tops[1]-start)*.25),hold=Math.min(1,travel*.05);
+  const motionStart=portrait?portraitOpeningMotionStart:openingMotionStart;
+  const motionFrame=Math.round(motionStart*fps),resumeTime=chapters[2].start;
+  // Keep the reading hold and the source's still pause invertible for playback,
+  // but fit them into one scroll pixel. The lunch chapter remains reachable
+  // through the same inverse mapping; later chapter anchors stay in place.
+  return [
+    ...route.filter(([,time])=>time<motionStart)
+      .map(([,time])=>[start+hold*time/motionStart,time]),
+    [start+hold,motionStart],
+    [start+travel*.1,(motionFrame+4)/fps],
+    [start+travel*.5,(motionFrame+10)/fps],
+    [start+travel,(motionFrame+16)/fps],
+    ...route.filter(([,time])=>time>=resumeTime),
+  ];
 }
 export const nextStops=shots.map(name=>posterTimes[name]);
 // Percentages refer to the two native masters, portrait first then landscape.
@@ -83,8 +107,11 @@ export function configure(cut){
         frames:[[readings[4]-.16,...bounds],[lastFrame,...bounds]]});
     }
   }
-  return {chapters,sceneAt,makeRoute,mapValue,fps,lastFrame,posterTimes,nextStops,
-    album:'assets/'+cut+'/', revision:invitation?'?v=quality-3':'?v=1',
+  return {chapters:invitation?invitationChapters:chapters,sceneAt,
+    makeRoute:invitation?makeInvitationRoute:makeRoute,mapValue,fps,lastFrame,posterTimes,nextStops,
+    openingMotionStart:invitation?openingMotionStart:undefined,
+    portraitOpeningMotionStart:invitation?portraitOpeningMotionStart:undefined,
+    album:'assets/'+cut+'/', revision:invitation?'?v=quality-5':'?v=1',
     responsiveMedia:invitation,
     cue:invitation?'See how lunch works':found?'Scroll with the tag':'Scroll down the counter',
     replay:invitation?'Back to your tag':found?'Find it again':'Back to the pizza box',

@@ -14,7 +14,7 @@ concurrency:
 jobs:
   render:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     env:
       QUALITY_SOURCE_DIR: /tmp/homepage-quality-sources
     steps:
@@ -25,24 +25,17 @@ jobs:
       - name: Install media tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg python3-pil
+          sudo apt-get install -y ffmpeg python3-pil python3-numpy python3-scipy
       - name: Prepare verified photographs and accepted camera transitions
         run: |
           python3 scripts/prepare-quality-sources.py "$QUALITY_SOURCE_DIR" --threads 2
-      - name: Render responsive videos and stills
+      - name: Render repaired desktop videos and stills
         run: |
-          python3 - <<'PY'
-          from concurrent.futures import ThreadPoolExecutor
-          import os, subprocess
-          def render(framing):
-              subprocess.run(['python3', 'scripts/render-quality-editions.py', framing,
-                  '--source-dir', os.environ['QUALITY_SOURCE_DIR'], '--motion', 'camera',
-                  '--motion-override-dir', os.path.join(os.environ['QUALITY_SOURCE_DIR'], 'motion'),
-                  '--cuts-config', 'film-source/pass-the-salsa/motion-edits.json',
-                  '--threads', '2', '--preset', 'medium'], check=True)
-          with ThreadPoolExecutor(max_workers=2) as pool:
-              list(pool.map(render, ['wide', 'portrait']))
-          PY
+          python3 scripts/render-quality-editions.py wide \
+            --source-dir "$QUALITY_SOURCE_DIR" --motion camera \
+            --motion-override-dir "$QUALITY_SOURCE_DIR/motion" \
+            --cuts-config film-source/pass-the-salsa/motion-edits.json \
+            --threads 2 --preset medium
       - name: Verify delivery and guest flow
         run: |
           node --test scripts/page-flow.test.mjs scripts/film-quality.test.mjs
@@ -59,5 +52,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add assets/pass-the-salsa
-          git commit -m 'Render reviewed camera transitions at 4K, HD and 720p'
+          git commit -m 'Render repaired original lime transition at 4K, HD and 720p'
           git push origin HEAD:quality-homepage-20261124

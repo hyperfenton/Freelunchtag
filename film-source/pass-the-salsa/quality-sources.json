@@ -5,7 +5,7 @@
   "aspect_ratio": "auto",
   "enhancement": "default",
   "frame_interpolation": null,
-  "notes": "The eight enhanced original takes are retained as sharp photograph sources and the reviewed portrait motion. Four separate replacement desktop camera takes preserve rigid props through natural foreground occlusion. Prepare both groups with scripts/prepare-quality-sources.py. No optical-flow interpolation or motion retiming is used.",
+  "notes": "The eight enhanced original takes are retained as photograph sources and portrait motion. Three reviewed replacement desktop camera takes remain. The first desktop move reuses the original enhanced take with a reproducible local repair. Prototype v7 is approved for the4K stage build; delivered4K review remains a publication gate. No optical-flow interpolation or source motion retiming is used.",
   "sources": [
     {
       "path": "wide/00.mp4",
@@ -147,7 +147,7 @@
       }
     ],
     "wide_holds": "Original enhanced photographs at the hold-24 poster composition with a shared 2% center crop, held stationary.",
-    "wide_transitions": "Four reviewed camera moves; three enhanced to 3840x2160 with Topaz and one generated at 3840x2160. All retain 24 fps.",
+    "wide_transitions": "The original enhanced first camera move with a local lime repair, followed by three previously reviewed camera moves. All are delivered at3840x2160 and24fps.",
     "portrait_transitions": "Original enhanced portrait camera takes with reviewed defect intervals removed using clean editorial cuts.",
     "output_frames": 866,
     "fps": 24,
@@ -157,13 +157,13 @@
     "retiming": false,
     "wide_alignment": {
       "shared_overscan": 1.02,
-      "mode": "one constant uniform scale and translation per take, applied to the whole image",
+      "mode": "One constant uniform whole-image scale and translation per take; local source compositing is documented separately.",
       "takes": [
         {
           "take": "00",
-          "scale": 1.01884,
-          "translation_x_fraction": 0.00929,
-          "translation_y_fraction": 0.01673
+          "scale": 1.00593465,
+          "translation_x_fraction": -3.2e-07,
+          "translation_y_fraction": -6.128e-05
         },
         {
           "take": "01",
@@ -189,39 +189,20 @@
     },
     "source_review": {
       "date": "2026-11-24",
-      "desktop_4k_frames_reviewed": 436,
+      "previous_release_desktop_4k_frames_reviewed": 436,
+      "opening_repair_status": "v7 accepted at960x540;4K staging export pending",
       "review_scope": [
-        "every source frame for motion stability",
-        "native-resolution detail crops",
-        "lettering and logo consistency",
-        "rigid props, ground contact and occlusion"
+        "single lime identity and continuous jump",
+        "table contact and shadow",
+        "existing-pixel patch boundaries",
+        "lettering, tag and truck geometry",
+        "entry and exit framing",
+        "compressed4K delivery"
       ],
-      "result": "accepted; final assembly separately checked before publication"
+      "result": "Prototype motion review passed. Publication waits for the focused native4K and compressed delivery checks."
     }
   },
   "motion_overrides": [
-    {
-      "path": "wide/00.mp4",
-      "job_id": "3a7d3d17-934b-46a2-a482-16c41d63fcca",
-      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_33vld0rG4YKak1BAYAmJDhJgTVg/hf_20261124_165656_3a7d3d17-934b-46a2-a482-16c41d63fcca.mp4",
-      "bytes": 37260641,
-      "sha256": "68a9ff2664bee7360fc26a9983d37689a718cfd36d9003d5f0c42e1c3c2d92f3",
-      "width": 3840,
-      "height": 2160,
-      "r_frame_rate": "24/1",
-      "duration": "4.041667",
-      "nb_frames": "97",
-      "model": "topaz_video",
-      "source_model": "seedance_2_5",
-      "source_job_id": "f4e67037-48e3-4572-aecd-e5037582151e",
-      "resolution": "2160p",
-      "frame_interpolation": null,
-      "normalization": {
-        "append_final_frames": 48,
-        "output_frames": 145,
-        "fps": 24
-      }
-    },
     {
       "path": "wide/01.mp4",
       "job_id": "c71ff027-cce0-448c-b589-4b5ded42d23a",
@@ -286,6 +267,70 @@
         "output_frames": 145,
         "fps": 24
       }
+    }
+  ],
+  "archived_motion_overrides": [
+    {
+      "path": "wide/00.mp4",
+      "job_id": "3a7d3d17-934b-46a2-a482-16c41d63fcca",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_33vld0rG4YKak1BAYAmJDhJgTVg/hf_20261124_165656_3a7d3d17-934b-46a2-a482-16c41d63fcca.mp4",
+      "bytes": 37260641,
+      "sha256": "68a9ff2664bee7360fc26a9983d37689a718cfd36d9003d5f0c42e1c3c2d92f3",
+      "width": 3840,
+      "height": 2160,
+      "r_frame_rate": "24/1",
+      "duration": "4.041667",
+      "nb_frames": "97",
+      "model": "topaz_video",
+      "source_model": "seedance_2_5",
+      "source_job_id": "f4e67037-48e3-4572-aecd-e5037582151e",
+      "resolution": "2160p",
+      "frame_interpolation": null,
+      "normalization": {
+        "append_final_frames": 48,
+        "output_frames": 145,
+        "fps": 24
+      },
+      "archive_reason": "Preserved foreground-wipe alternative; the homepage opening is returning to the original lime camera move."
+    }
+  ],
+  "local_motion_repairs": [
+    {
+      "path": "wide/00.mp4",
+      "input": "wide/00.mp4",
+      "script": "scripts/repair-opening-transition.py",
+      "params": "scripts/repair-opening-transition.json",
+      "width": 3840,
+      "height": 2160,
+      "r_frame_rate": "24/1",
+      "nb_frames": "145",
+      "review_status": "accepted",
+      "method": "Local compositing using existing source pixels; no new scene generation.",
+      "prototype_review": {
+        "version": "v7",
+        "width": 960,
+        "height": 540,
+        "fps": 24,
+        "frames": 145,
+        "result": "accepted",
+        "date": "2026-11-24"
+      },
+      "changed_source_frames": [
+        100,
+        131
+      ],
+      "rigid_airborne_frames": [
+        107,
+        113
+      ],
+      "native_takeoff_frame": 106,
+      "native_landing_from": 114,
+      "donor_reference_frames": [
+        99,
+        135
+      ],
+      "same_frame_clean_donors": true,
+      "new_generation_jobs": false
     }
   ]
 }
