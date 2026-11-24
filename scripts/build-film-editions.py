@@ -19,7 +19,7 @@ EDITIONS = {
     },
     'pass-the-salsa': {
         'name': 'Someone gave you a tag', 'path': 'your-tag', 'color': '#fff4d8',
-        'page_title': 'Someone gave you a Free Lunch Tag', 'cue': 'See how lunch works', 'revision': '2',
+        'page_title': 'Someone gave you a Free Lunch Tag', 'cue': 'See how lunch works', 'revision': 'quality-1',
         'title': 'Someone gave you a <em>Free Lunch Tag.</em>',
         'description': 'Someone gave you a Free Lunch Tag. Your Meadows host buys lunch. Scan the tag or enter its code to meet your host and make a plan.',
         'alt': 'A Classic Lightning keychain clips to a bag at the taco window. The bag reads “Someone gave you a Free Lunch Tag. Your Meadows host buys lunch.”'
@@ -46,7 +46,7 @@ def build():
         html=html.replace('https://freelunchtag.com/"','https://freelunchtag.com/'+path+'.html"')
         html=html.replace('assets/film/film-lift','assets/'+cut+'/film-offer').replace('.webp?v=walkthrough-1',f'.webp?v={revision}')
         html=html.replace('#120d25',settings['color'])
-        html=html.replace('<link rel="preload" as="font"', '<link rel="stylesheet" href="film-editions.css?v=2">\n<link rel="preload" as="font"')
+        html=html.replace('<link rel="preload" as="font"', '<link rel="stylesheet" href="film-editions.css?v=quality-1">\n<link rel="preload" as="font"')
         html=html.replace('How lunch works</button>','Lunch guide</button>')
         html=html.replace('<button type="button" id="readScene"', '<button type="button" id="tableTalk" aria-haspopup="dialog">Draw a table question</button>\n      <button type="button" id="readScene"')
         html=html.replace('Scroll to follow the glass', settings['cue'])
@@ -62,6 +62,13 @@ def build():
         html=html.replace('After lunch, bring your tag to Meadows Baptist Church if you’d like to visit. We’d love to meet you.', 'Keep your tag on your bag or trade designs after lunch. Each code stays with its original host. If you’d like to meet more of the Meadows crew in Plano, you’re welcome to visit.')
         html=html.replace('<div class="opening">','<div class="opening">\n        <noscript><img class="no-script-film" src="assets/'+cut+'/film-offer.webp?v='+revision+'" alt="'+settings['alt']+'"></noscript>')
         if cut=='pass-the-salsa':
+            album=f'assets/{cut}/'
+            wide_sources=', '.join(f'{album}film-offer{suffix}.webp?v={revision} {width}w' for suffix,width in [('-wide-720',1280),('-wide',1920),('-wide-4k',3840)])
+            phone_sources=', '.join(f'{album}film-offer{suffix}.webp?v={revision} {width}w' for suffix,width in [('-720',720),('',1080)])
+            html=html.replace(f'srcset="{album}film-offer-wide.webp?v={revision}"', f'srcset="{wide_sources}" sizes="100vw"')
+            html=html.replace(f'<img src="{album}film-offer.webp?v={revision}" alt="" fetchpriority="high">', f'<img src="{album}film-offer.webp?v={revision}" srcset="{phone_sources}" sizes="100vw" alt="" fetchpriority="high">')
+            html=html.replace('<button type="button" id="motionToggle" aria-pressed="false">Pause motion</button>', '''<button type="button" id="motionToggle" aria-pressed="false">Pause motion</button>
+      <div class="film-quality"><label for="filmQuality">Quality</label><span class="film-quality-choice"><select id="filmQuality" aria-describedby="filmQualityStatus"><option value="auto">Auto</option><option value="hd">HD</option><option value="4k">4K</option></select></span><p id="filmQualityStatus" role="status" aria-live="polite"></p></div>''')
             html=html.replace('Pizza Saturday?', 'Tacos at noon?')
             html=html.replace('Keep your tag on your bag', 'Keep your tag on your keys')
             html=html.replace('Draw a table question</button>', 'Mild or hot? Pick a question</button>')

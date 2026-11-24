@@ -39,3 +39,13 @@ html[data-film="pass-the-salsa"]{--paper:#fff4d8;--ink:#1b3424;--ring:#ab401a}
 
 /* Touch screens have no hover. Place each invitation above its bottle cap. */
 [data-object="pass-the-salsa-mild"] .film-pin-label,[data-object="pass-the-salsa-hot"] .film-pin-label{opacity:1;left:50%;right:auto;bottom:calc(100% + 4px);transform:translateX(-50%);background:#fff5dc;color:#243b2a;box-shadow:0 1px 3px #302a2060}
+
+.film-tools .tool-list{max-height:calc(100dvh - 82px);overflow-y:auto;overscroll-behavior:contain}
+.film-quality{display:grid;grid-template-columns:1fr 100px;align-items:center;gap:6px;margin:6px 4px 2px;padding:10px 8px 4px;border-top:1px solid #243b2a30}
+.film-quality label{font-size:.875rem;font-weight:650}
+.film-quality-choice{position:relative;display:block}
+.film-quality-choice::after{content:"";position:absolute;right:13px;top:calc(50% - 5px);width:7px;height:7px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(45deg);pointer-events:none}
+.film-quality select{appearance:none;-webkit-appearance:none;min-height:44px;width:100%;padding:8px 30px 8px 10px;border:1px solid #243b2a55;border-radius:7px;background:#fff9eb;color:inherit;font:inherit;font-size:.875rem;cursor:pointer}
+.film-quality select:focus-visible{outline:3px solid var(--ring);outline-offset:3px}
+.film-quality select:disabled{opacity:.65;cursor:default}
+#filmQualityStatus{grid-column:1/-1;min-height:1.2em;margin:0;font-size:.875rem;line-height:1.35;color:#435648}

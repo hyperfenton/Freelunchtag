@@ -12,6 +12,12 @@ Scroll position controls the frame in both directions. Stopping leaves the curre
 
 `index.html`, `your-tag.html` and `pass-the-salsa.html` contain the same primary experience. All three use the homepage as their canonical URL, so existing direct links keep working. Both taco-window compositions use native portrait and landscape footage in `assets/pass-the-salsa/`. Each edit lasts about 36 seconds. The site serves these files directly from GitHub Pages and only requests the framing it needs.
 
+### Image quality and loading
+
+The selected film is rebuilt from enhanced source takes, with a 3840 × 2160 landscape version, 1920 × 1080 landscape HD, 1080 × 2340 portrait HD, and smaller 720-pixel versions. Reading stills have matching responsive sizes. The landscape 4K source is an enhancement of the original footage using Higgsfield's Topaz video upscaler; it is not a native 4K camera capture. No frame interpolation is used, so the 866-frame, 24 fps edit and its clickable-object timing stay consistent.
+
+Film options includes **Auto / HD / 4K**. Auto chooses one video before starting its download: it uses 4K only for a large display when both fast transfer evidence and smooth, efficient decoding are available. Unknown network capability defaults to HD; slow connections use the smaller rendition. Phones use portrait media. Explicitly choosing a quality reevaluates the current display, while ordinary resizing avoids an additional background movie download. A stalled 4K load, decoding failure, or repeated slow seeks falls back to a lighter version. Reduced-motion and Save Data preferences retain the still-image experience.
+
 ### Saved designs
 
 The other designs remain available at their direct links for future use. They are removed from the primary page’s menu and marked `noindex,follow`:
@@ -29,6 +35,8 @@ Every saved design retains the private tag lookup and collectible gallery. The o
 The original 36-second silent film uses six Higgsfield Kling 3.0 camera moves generated from seven ImageGen photographs. Each pair of moves shares an endpoint. Its source clips are in `film-source/`, with the source lettering masks and paper tracking marks retained alongside the footage. The offline renderer joins the clips at their endpoints, omits duplicate frames and follows the action with separate portrait and landscape crops. It applies no fades or dissolves. Its web films and stills remain in `assets/film/`.
 
 Other source camera moves live under `film-source/<edition>/`, with native phone takes in the `portrait/` subdirectory where available. Rebuild a master and its stills with `python3 scripts/render-editions.py found-tag portrait`, substituting the edition and `wide` as needed. To rebuild the original web media with Python 3, OpenCV, Pillow and FFmpeg, run `python3 scripts/render-film.py`. Run `python3 scripts/check-film.py` to decode every shipped frame and flag abrupt changes, then `node --test scripts/page-flow.test.mjs` to check section order, scroll mapping, invitation entry and media distribution.
+
+For the selected homepage's enhanced media, use `scripts/render-quality-editions.py` instead of the legacy edition renderer. `film-source/pass-the-salsa/quality-sources.json` records the enhancement jobs, source URLs and checksums. Download its eight enhanced takes into a working folder containing `wide/00.mp4` through `wide/03.mp4` and `portrait/00.mp4` through `portrait/03.mp4`. Run `python3 scripts/render-quality-editions.py wide --source-dir /path/to/enhanced --preset medium`, then repeat with `portrait`. Python 3, Pillow, FFmpeg and ffprobe are required. The renderer stages and checks all outputs before replacement, exports stills before video compression, and retains the short GOP needed for responsive scrolling. Run `node --test scripts/page-flow.test.mjs scripts/film-quality.test.mjs` for the guest-flow and quality-selection checks.
 
 ## Expansion plan for eight hosts and 80 physical tags
 

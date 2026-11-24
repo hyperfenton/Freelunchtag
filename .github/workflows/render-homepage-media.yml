@@ -1,0 +1,79 @@
+name: Render homepage quality variants
+
+on:
+  push:
+    branches: [quality-homepage-20261124]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: homepage-quality-render
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      QUALITY_SOURCE_DIR: ${{ runner.temp }}/homepage-quality-sources
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install media tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg python3-pil
+      - name: Download verified enhanced takes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from concurrent.futures import ThreadPoolExecutor
+          import hashlib, json, os, urllib.request
+          root = Path(os.environ['QUALITY_SOURCE_DIR'])
+          manifest = json.loads(Path('film-source/pass-the-salsa/quality-sources.json').read_text())
+          def download(source):
+              target = root / source['path']
+              target.parent.mkdir(parents=True, exist_ok=True)
+              with urllib.request.urlopen(source['url'], timeout=120) as response, target.open('wb') as output:
+                  while block := response.read(1024 * 1024):
+                      output.write(block)
+              with target.open('rb') as handle:
+                  digest = hashlib.file_digest(handle, 'sha256').hexdigest()
+              if digest != source['sha256'] or target.stat().st_size != source['bytes']:
+                  raise ValueError('Source verification failed: ' + source['path'])
+              print('Verified ' + source['path'], flush=True)
+          with ThreadPoolExecutor(max_workers=4) as pool:
+              list(pool.map(download, manifest['sources']))
+          PY
+      - name: Render responsive videos and stills
+        run: |
+          python3 - <<'PY'
+          from concurrent.futures import ThreadPoolExecutor
+          import os, subprocess
+          def render(framing):
+              subprocess.run(['python3', 'scripts/render-quality-editions.py', framing,
+                  '--source-dir', os.environ['QUALITY_SOURCE_DIR'], '--threads', '2', '--preset', 'medium'], check=True)
+          with ThreadPoolExecutor(max_workers=2) as pool:
+              list(pool.map(render, ['wide', 'portrait']))
+          PY
+      - name: Verify delivery and guest flow
+        run: |
+          node --test scripts/page-flow.test.mjs scripts/film-quality.test.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+          for path in sorted(Path('assets/pass-the-salsa').glob('*.mp4')):
+              subprocess.run(['ffmpeg', '-v', 'error', '-xerror', '-threads', '2', '-i', str(path), '-f', 'null', '-'], check=True)
+              print('Decoded ' + path.name, flush=True)
+          PY
+          git diff --check
+      - name: Save verified media to the staging branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/pass-the-salsa
+          git commit -m 'Render enhanced homepage media at 4K, HD and 720p'
+          git push origin HEAD:quality-homepage-20261124
