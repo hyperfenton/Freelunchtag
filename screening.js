@@ -1,9 +1,9 @@
 import * as originalRoute from './scroll-route.mjs?v=walkthrough-1';
 import {mountFilmObjects, posterTimes as originalPosters} from './film-objects.mjs?v=editions-1';
-import {selectFilmQuality, filmFilename, filmPosterSources} from './film-quality.mjs?v=quality-2';
+import {selectFilmQuality, filmFilename, filmPosterSources} from './film-quality.mjs?v=quality-3';
 
 const editionName=document.documentElement.dataset.film;
-const edition=editionName ? (await import('./alternate-films.mjs?v=quality-2')).configure(editionName) : null;
+const edition=editionName ? (await import('./alternate-films.mjs?v=quality-3')).configure(editionName) : null;
 const {chapters, fps, lastFrame, makeRoute, mapValue, sceneAt}=edition || originalRoute;
 const posterTimes=edition?.posterTimes || originalPosters;
 const byId=id=>document.getElementById(id);
@@ -341,13 +341,46 @@ function resize(){
   if(!watching)followScroll();
 }
 wide.addEventListener('change',()=>{resize();chooseFile();});addEventListener('resize',resize);
+// Keep clipped headings and prose available to assistive technology, while
+// removing only their controls from sequential keyboard navigation. The saved
+// value travels with clones; moved controls remain programmatically focusable.
+function manageClippedFocus(){
+  const marker='data-film-tabindex';
+  const controls='a[href],area[href],button,input,select,textarea,summary,iframe,object,embed,audio[controls],video[controls],[contenteditable]:not([contenteditable="false"]),[tabindex],['+marker+']';
+  const update=node=>{
+    if(node.closest('body>main,body>footer')){
+      if(!node.hasAttribute(marker))node.setAttribute(marker,JSON.stringify(node.getAttribute('tabindex')));
+      node.setAttribute('tabindex','-1');
+    }else if(node.hasAttribute(marker)){
+      const previous=JSON.parse(node.getAttribute(marker));
+      if(previous===null)node.removeAttribute('tabindex');
+      else node.setAttribute('tabindex',previous);
+      node.removeAttribute(marker);
+    }
+  };
+  const visit=node=>{
+    if(node.nodeType!==1||!node.isConnected)return;
+    if(node.matches(controls))update(node);
+    node.querySelectorAll(controls).forEach(update);
+  };
+  visit(document.body);
+  // Attribute changes above are deliberately not observed, avoiding loops.
+  new MutationObserver(records=>{
+    for(const record of records)for(const node of record.addedNodes)visit(node);
+  }).observe(document.body,{childList:true,subtree:true});
+}
 function moveHere(node){
   if(!node)return;
   const slot=document.createComment('scene detail in original page flow');
   node.before(slot);content.append(node);relocated={node,slot};
 }
 function copyElements(selector){
-  document.querySelectorAll(selector).forEach(n=>content.append(n.cloneNode(true)));
+  document.querySelectorAll(selector).forEach(n=>{
+    const copy=n.cloneNode(true);
+    // Footer clipping must not follow the credits into this dialog.
+    if(n.matches('footer .credits'))copy.classList.remove('credits');
+    content.append(copy);
+  });
 }
 let sceneReturn;
 function sceneDetails(id=chapters[selected].id, trigger=options.querySelector('summary')){
@@ -459,9 +492,7 @@ function followHash(){
 }
 for(const chapter of chapters)byId(chapter.id).style.setProperty('--travel',chapter.span+'svh');
 root.classList.add('projecting');
-// Clipped page content must not create invisible keyboard stops. Dialogs move
-// or copy its children outside these ancestors, restoring normal interaction.
-document.querySelectorAll('body>main,body>footer').forEach(node=>{node.inert=true;});
+manageClippedFocus();
 measure();wanted=frameTime(mapValue(route,scrollY));setScene(wanted);showPoster(selected,wanted);
 addEventListener('hashchange',followHash);
 if(location.hash)followHash();

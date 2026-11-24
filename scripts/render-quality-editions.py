@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the selected Free Lunch film using five fixed enhanced photographs.
+"""Render the selected Free Lunch film from enhanced camera takes.
 
 The source directory must contain wide/00.mp4 through wide/03.mp4 and/or
 portrait/00.mp4 through portrait/03.mp4. Each take is exactly 145 frames at
@@ -7,18 +7,30 @@ portrait/00.mp4 through portrait/03.mp4. Each take is exactly 145 frames at
 
     python3 scripts/render-quality-editions.py wide --source-dir /path/to/enhanced
 
-Only frame 0 of each take and frame 144 of take 03 can enter the output. The
-generated motion between those anchors is never used. Every output frame is
-one fixed photograph with, at most, a uniform 1.5% center zoom. Four hard cuts
-replace transitions; there is no blending, optical flow, or object animation.
-Each interactive reading window is completely stationary, at the same crop as
-the previous hold-24 poster, including its fixed lens-match adjustment.
+The default camera mode keeps native-rate camera travel, the five 58-frame
+reading holds, the original breathing crop, and the lookup lens match. Reviewed
+defect intervals can be removed with --cuts-config; retained frames remain at
+24 fps, and the clean final photograph fills the removed time. There is no
+frame interpolation, speed change, crossfade, or additional reframing.
+Use --source-override TAKE=PATH to replace only a reviewed, repaired take;
+overrides must already have the same 24 fps / 145-frame source timing. Reading
+holds and posters always use the photographs in --source-dir, even when a
+moving take is overridden. When all four wide takes are overridden, their
+keyframes are the approved hold-24 posters: reading photographs therefore stay
+at that poster crop with a shared 2% overscan. Reviewed whole-image scale and
+translation align the fresh moving takes to those photographs without exposing
+an image edge. There is no additional breathing zoom or lookup lens adjustment.
+
+The previous five-photograph treatment remains available with --motion fixed.
+That archival mode selects only frame 0 of each take and frame 144 of take 03,
+using hard cuts and a uniform center zoom of at most 1.5% between reading stops.
 
 Requires FFmpeg, ffprobe, and Pillow. Frames are streamed through memory; no
 lossless intermediate film is written. All deliverables are staged and checked
 before replacing existing files. The duration remains 866 frames at 24 fps.
-Use --plan-only to inspect and validate the deterministic frame plan without
-reading source media or rendering files.
+Use --plan-only to inspect and validate either frame plan without reading
+source media or rendering files. This renderer does not repair source defects;
+camera-mode source replacements must pass their motion review before export.
 """
 
 from __future__ import annotations
@@ -49,9 +61,32 @@ STOPS = ("offer", "lookup", "text", "swap", "close")
 MAX_BYTES = 100_000_000
 CUT_FRAMES = (136, 353, 548, 730)
 READING_FRAMES = (0, 202, 404, 606, 808)
+CAMERA_CUT_FRAMES = READING_FRAMES[1:]
 READING_BEFORE = Fraction(16, 100) * FPS
 READING_AFTER = Fraction(257, 100) * FPS
 MAX_ZOOM = 1.015
+# The four approved fresh wide takes were generated from the hold-24 posters.
+# Their eight enhanced endpoints share a small global framing offset. Each
+# take receives one CONSTANT uniform transform, averaged from its two endpoint
+# fits: (scale, horizontal translation / width, vertical translation / height).
+# A common 2% overscan on both photographs and motion provides genuine image
+# pixels around the translated edges. No transform changes during a take, and
+# no individual object is warped. These values apply only to all-four-wide
+# override exports; original/partial source exports and portrait are unchanged.
+WIDE_POSTER_OVERSCAN = 1.02
+WIDE_MOTION_ALIGNMENT = (
+    (1.01884, .00929, .01673),
+    (1.01879, .00909, .01699),
+    (1.01859, .00902, .01681),
+    (1.01946, .00842, .01613),
+)
+# Inclusive source-frame exclusions. Supplied JSON entries override this map;
+# it uses {"wide":{"00":[[start,end],...]},"portrait":{...}}. Empty lists
+# explicitly retain a fully reviewed take, including a clean replacement.
+DEFAULT_EXCLUSIONS = {
+    "wide": {0: ((96, 134),), 1: ((72, 120),), 2: ((84, 113),), 3: ((42, 122),)},
+    "portrait": {0: ((66, 111),), 1: (), 2: (), 3: ((31, 62), (106, 122))},
+}
 
 
 @dataclass(frozen=True)
@@ -68,6 +103,16 @@ class PlannedFrame:
     number: int
     anchor: int
     zoom: float
+
+
+@dataclass(frozen=True)
+class CameraPlannedFrame:
+    number: int
+    take: int
+    source_frame: int
+    anchor: int
+    hold: int | None
+    padding: bool = False
 
 
 # The 1080 x 2340 portrait exceeds Level 4.1's 8,192 macroblocks per frame;
@@ -130,13 +175,14 @@ def require_fps(path, stream):
             raise ValueError(f"Expected {FPS} fps in {path}, got {field}={rate}")
 
 
-def validate_sources(folder):
-    paths = [folder / f"{i:02d}.mp4" for i in range(4)]
+def validate_sources(folder, overrides=None):
+    overrides = overrides or {}
+    paths = [overrides.get(i, folder / f"{i:02d}.mp4") for i in range(4)]
     missing = [str(path) for path in paths if not path.is_file()]
     if missing:
         raise ValueError("Missing source takes: " + ", ".join(missing))
     sources = []
-    for path in paths:
+    for index, path in enumerate(paths):
         stream, _ = probe(path)
         require_fps(path, stream)
         count = frame_count(path, stream)
@@ -151,7 +197,7 @@ def validate_sources(folder):
         rotations.append(stream.get("tags", {}).get("rotate", 0))
         if any(float(rotation) % 360 for rotation in rotations):
             raise ValueError(f"Bake the source rotation into its pixels first: {path}")
-        log(f"Source {path.name}: {width} x {height}, {count} frames, {FPS} fps")
+        log(f"Source {index:02d}: {path} ({width} x {height}, {count} frames, {FPS} fps)")
         sources.append((path, width, height))
     return sources
 
@@ -171,6 +217,42 @@ def stop_process(process):
         except subprocess.TimeoutExpired:
             process.kill()
             process.wait()
+
+
+def source_frames(sources, threads, plan):
+    """Decode native frames once, selecting the explicit cut/arrival-hold plan."""
+    for index, (path, width, height) in enumerate(sources):
+        selections = [[] for _ in range(FLIGHT + 1)]
+        for planned in plan:
+            if planned.take == index:
+                selections[planned.source_frame].append(planned)
+        command = [
+            "ffmpeg", "-hide_banner", "-v", "error", "-nostdin", "-xerror",
+            "-threads", str(threads), "-noautorotate", "-i", str(path),
+            "-map", "0:v:0", "-an", "-sn", "-dn", "-fps_mode", "passthrough",
+            "-pix_fmt", "rgb24", "-c:v", "rawvideo", "-threads", str(threads),
+            "-f", "rawvideo", "pipe:1",
+        ]
+        frame_bytes = width * height * 3
+        with tempfile.TemporaryFile() as errors:
+            decoder = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=errors)
+            try:
+                for number in range(FLIGHT + 1):
+                    data = decoder.stdout.read(frame_bytes)
+                    if len(data) != frame_bytes:
+                        raise RuntimeError(
+                            f"Short source {path} at frame {number}: {error_tail(errors)}"
+                        )
+                    with Image.frombytes("RGB", (width, height), data) as frame:
+                        for planned in selections[number]:
+                            yield frame, planned
+                if decoder.stdout.read(1):
+                    raise RuntimeError(f"More than {FLIGHT + 1} decoded frames in {path}")
+                if decoder.wait():
+                    raise RuntimeError(f"Decoder failed for {path}: {error_tail(errors)}")
+            finally:
+                decoder.stdout.close()
+                stop_process(decoder)
 
 
 def source_anchors(sources, threads):
@@ -214,6 +296,154 @@ def source_anchors(sources, threads):
 
 def ease(value):
     return (1 - math.cos(math.pi * min(1, max(0, value)))) / 2
+
+
+def normalize_intervals(intervals):
+    if not isinstance(intervals, (list, tuple)):
+        raise ValueError("Excluded intervals must be a list of [first,last] source-frame pairs")
+    checked = []
+    for pair in intervals:
+        if not isinstance(pair, (list, tuple)) or len(pair) != 2 or any(type(n) is not int for n in pair):
+            raise ValueError(f"Invalid inclusive excluded interval: {pair}")
+        first, last = pair
+        if not 1 <= first <= last < FLIGHT:
+            raise ValueError(f"Exclusions must preserve source frames 0 and {FLIGHT}: {pair}")
+        checked.append((first, last))
+    merged = []
+    for first, last in sorted(checked):
+        if merged and first <= merged[-1][1] + 1:
+            merged[-1] = (merged[-1][0], max(last, merged[-1][1]))
+        else:
+            merged.append((first, last))
+    return tuple(merged)
+
+
+def load_exclusions(path=None):
+    """JSON entries override reviewed defaults; [] explicitly clears one take."""
+    result = {framing: {take: normalize_intervals(intervals) for take, intervals in cuts.items()}
+              for framing, cuts in DEFAULT_EXCLUSIONS.items()}
+    if path is None:
+        return result
+    data = json.loads(Path(path).read_text())
+    if not isinstance(data, dict) or any(key not in RENDITIONS for key in data):
+        raise ValueError("Cut configuration must contain only wide and/or portrait objects")
+    for framing, takes in data.items():
+        if not isinstance(takes, dict):
+            raise ValueError(f"Cut configuration for {framing} must be an object keyed by take")
+        seen = set()
+        for take, intervals in takes.items():
+            index = integer(take)
+            if index not in range(4) or index in seen:
+                raise ValueError(f"Invalid or repeated take in {framing} cuts: {take}")
+            seen.add(index)
+            result[framing][index] = normalize_intervals(intervals)
+    return result
+
+
+def build_camera_plan(exclusions=None):
+    exclusions = exclusions or {}
+    plan = []
+    for take in range(4):
+        intervals = normalize_intervals(exclusions.get(take, ()))
+        excluded = {number for first, last in intervals for number in range(first, last + 1)}
+        for hold in range(HOLD):
+            plan.append(CameraPlannedFrame(len(plan), take, 0, take, hold))
+        # Source frame zero is already present in the reading hold. Native
+        # moving frames 1..144 occupy exactly 144 slots before any exclusions.
+        for source_frame in range(1, FLIGHT + 1):
+            if source_frame not in excluded:
+                plan.append(CameraPlannedFrame(len(plan), take, source_frame, take, None))
+        for _ in range(len(excluded)):
+            plan.append(CameraPlannedFrame(len(plan), take, FLIGHT, take, None, True))
+    for hold in range(HOLD):
+        plan.append(CameraPlannedFrame(len(plan), 3, FLIGHT, 4, hold))
+    result = tuple(plan)
+    validate_camera_plan(result, exclusions)
+    return result
+
+
+def validate_camera_plan(plan, exclusions=None):
+    if len(plan) != TOTAL_FRAMES:
+        raise ValueError(f"Camera plan must contain {TOTAL_FRAMES} frames")
+    for number, frame in enumerate(plan):
+        if frame.number != number or frame.take not in range(4):
+            raise ValueError(f"Invalid camera frame at {number}")
+        if not 0 <= frame.source_frame <= FLIGHT or frame.anchor not in range(5):
+            raise ValueError(f"Invalid source selection at {number}")
+    for take in range(4):
+        flight = [frame for frame in plan if frame.take == take and frame.hold is None]
+        native = [frame.source_frame for frame in flight if not frame.padding]
+        padding = [frame for frame in flight if frame.padding]
+        if not native or native != sorted(set(native)) or native[0] < 1 or native[-1] != FLIGHT:
+            raise ValueError(f"Camera move {take:02d} has reordered frames or a missing clean arrival")
+        if any(frame.anchor != take for frame in flight):
+            raise ValueError(f"Camera move {take:02d} selects a different shot")
+        if [frame.padding for frame in flight] != [False] * len(native) + [True] * len(padding):
+            raise ValueError(f"Camera move {take:02d} inserts held frames inside native travel")
+        if any(frame.source_frame != FLIGHT for frame in padding):
+            raise ValueError(f"Camera move {take:02d} pads with a frame other than the clean arrival")
+        if exclusions is not None:
+            intervals = normalize_intervals(exclusions.get(take, ()))
+            excluded = {n for first, last in intervals for n in range(first, last + 1)}
+            if native != [n for n in range(1, FLIGHT + 1) if n not in excluded] or len(padding) != len(excluded):
+                raise ValueError(f"Camera move {take:02d} does not match its reviewed exclusions")
+        if [frame.number for frame in flight] != list(range(take * (HOLD + FLIGHT) + HOLD,
+                                                           (take + 1) * (HOLD + FLIGHT))):
+            raise ValueError(f"Camera move {take:02d} has changed timing")
+    for anchor, reading in enumerate(READING_FRAMES):
+        hold = plan[reading:reading + HOLD]
+        if [frame.hold for frame in hold] != list(range(HOLD)):
+            raise ValueError(f"Reading hold {anchor} has changed timing")
+        expected_source = FLIGHT if anchor == 4 else 0
+        if any(frame.anchor != anchor or frame.take != min(anchor, 3) or
+               frame.source_frame != expected_source or frame.padding for frame in hold):
+            raise ValueError(f"Reading hold {anchor} uses the wrong photograph")
+
+
+def camera_keyframes(plan):
+    cuts = set(CAMERA_CUT_FRAMES)
+    for previous, frame in zip(plan, plan[1:]):
+        if frame.take == previous.take and frame.hold is None and not frame.padding:
+            if frame.source_frame > previous.source_frame + 1:
+                cuts.add(frame.number)
+    return tuple(sorted(cuts))
+
+
+def consecutive_ranges(numbers):
+    result = []
+    for number in numbers:
+        if result and number == result[-1][1] + 1:
+            result[-1][1] = number
+        else:
+            result.append([number, number])
+    return result
+
+
+def describe_camera_plan(plan):
+    validate_camera_plan(plan)
+    moves = []
+    for take in range(4):
+        flight = [frame for frame in plan if frame.take == take and frame.hold is None]
+        native = [frame.source_frame for frame in flight if not frame.padding]
+        moves.append({
+            "take": f"{take:02d}.mp4", "retained_source_ranges": consecutive_ranges(native),
+            "excluded_source_ranges": consecutive_ranges([n for n in range(1, FLIGHT + 1) if n not in native]),
+            "native_frames": len(native), "clean_arrival_padding_frames": FLIGHT - len(native),
+            "output_first_frame": flight[0].number, "output_last_frame": flight[-1].number,
+        })
+    return {
+        "mode": "camera", "frames": len(plan), "fps": FPS,
+        "flight_slots": 4 * FLIGHT, "reading_hold_frames": 5 * HOLD,
+        "native_camera_frames": sum(move["native_frames"] for move in moves),
+        "arrival_padding_frames": sum(move["clean_arrival_padding_frames"] for move in moves),
+        "forced_keyframes": camera_keyframes(plan), "moves": moves,
+        "holds": [{
+            "shot": STOPS[anchor], "take": f"{min(anchor, 3):02d}.mp4",
+            "source_frame": FLIGHT if anchor == 4 else 0,
+            "output_first_frame": reading, "output_last_frame": reading + HOLD - 1,
+            "poster_frame": reading + FPS,
+        } for anchor, reading in enumerate(READING_FRAMES)],
+    }
 
 
 def build_frame_plan():
@@ -292,19 +522,44 @@ def describe_plan(plan):
     }
 
 
-def compose_anchor(frame, rendition, index, portrait):
-    """Freeze the old hold-24 poster composition once for each photograph."""
+def compose_frame(frame, rendition, index, hold, portrait, extra_zoom=1.0):
+    """Original center crop, 0.8% reading breath, and lookup lens matching."""
     width, height = frame.size
     w, h = rendition.width, rendition.height
     scale = min(width / w, height / h)
-    scale *= 1 - .008 * math.sin(math.pi * FPS / (HOLD - 1)) ** 2
-    if index == 1:
-        magnification = .0105 if portrait else .0045
-        scale /= 1 + magnification * (1 - ease(FPS / (HOLD - 1)))
+    if hold is not None:
+        scale *= 1 - .008 * math.sin(math.pi * hold / (HOLD - 1)) ** 2
+        if index == 1:
+            magnification = .0105 if portrait else .0045
+            scale /= 1 + magnification * (1 - ease(hold / (HOLD - 1)))
+    scale /= extra_zoom
     crop_width, crop_height = round(scale * w), round(scale * h)
     left, top = (width - crop_width) // 2, (height - crop_height) // 2
     with frame.crop((left, top, left + crop_width, top + crop_height)) as crop:
         return crop.resize((w, h), Image.Resampling.BICUBIC)
+
+
+def compose_anchor(frame, rendition, index, portrait, extra_zoom=1.0):
+    """Freeze the old hold-24 poster composition once for each photograph."""
+    return compose_frame(frame, rendition, index, FPS, portrait, extra_zoom)
+
+
+def compose_aligned_wide_motion(frame, rendition, take):
+    """One whole-image uniform transform, with no temporal or object warping."""
+    width, height = frame.size
+    w, h = rendition.width, rendition.height
+    scale, tx, ty = WIDE_MOTION_ALIGNMENT[take]
+    zoom = WIDE_POSTER_OVERSCAN * scale
+    tx *= WIDE_POSTER_OVERSCAN * w
+    ty *= WIDE_POSTER_OVERSCAN * h
+    sample_scale = min(width / w, height / h) / zoom
+    left = width / 2 - (w / 2 + tx) * sample_scale
+    top = height / 2 - (h / 2 + ty) * sample_scale
+    if left < 0 or top < 0 or left + w * sample_scale > width or top + h * sample_scale > height:
+        raise ValueError(f"Wide alignment for take {take:02d} would expose an image edge")
+    return frame.transform((w, h), Image.Transform.AFFINE,
+                           (sample_scale, 0, left, 0, sample_scale, top),
+                           resample=Image.Resampling.BICUBIC)
 
 
 def uniform_transform(size, zoom):
@@ -338,10 +593,10 @@ def poster_name(framing, rendition, shot):
     return f"film-{shot}{wide}{rendition.suffix}.webp"
 
 
-def encoder_options(rendition, threads, preset):
+def encoder_options(rendition, threads, preset, cut_frames=CUT_FRAMES):
     # Frame-index expressions avoid timestamp rounding at the four hard cuts.
     # Force IDR pictures so a new photograph cannot reference the prior shot.
-    forced_cuts = "expr:" + "+".join(f"eq(n,{number})" for number in CUT_FRAMES)
+    forced_cuts = "expr:" + "+".join(f"eq(n,{number})" for number in cut_frames)
     return [
         "-an", "-c:v", "libx264", "-tag:v", "avc1", "-threads", str(threads),
         "-preset", preset, "-crf", "18", "-profile:v", "high",
@@ -355,8 +610,8 @@ def encoder_options(rendition, threads, preset):
     ]
 
 
-def save_posters(view, framing, shot, stage):
-    for rendition in RENDITIONS[framing]:
+def save_posters(view, framing, shot, stage, renditions=None):
+    for rendition in renditions or RENDITIONS[framing]:
         path = stage / poster_name(framing, rendition, shot)
         if view.size == (rendition.width, rendition.height):
             view.save(path, quality=93, method=6)
@@ -365,9 +620,86 @@ def save_posters(view, framing, shot, stage):
                 still.save(path, quality=93, method=6)
 
 
-def render_master(sources, framing, stage, threads, preset, plan):
+def render_camera_master(sources, framing, stage, threads, preset, plan,
+                         anchor_sources=None, renditions=None, poster_framed=False):
+    validate_camera_plan(plan)
+    renditions = renditions or RENDITIONS[framing]
+    rendition = renditions[0]
+    cut_frames = camera_keyframes(plan)
+    target = stage / video_name(framing, rendition)
+    command = [
+        "ffmpeg", "-hide_banner", "-v", "error", "-y", "-f", "rawvideo",
+        "-pix_fmt", "rgb24", "-s", f"{rendition.width}x{rendition.height}",
+        "-r", str(FPS), "-i", "pipe:0", "-filter_threads", str(threads),
+        "-vf", "scale=out_color_matrix=bt709:out_range=tv,setsar=1",
+        *encoder_options(rendition, threads, preset, cut_frames), str(target),
+    ]
+    summary = describe_camera_plan(plan)
+    log(f"Rendering {target.name}: {summary['native_camera_frames']} native camera frames, "
+        f"{summary['arrival_padding_frames']} clean-arrival frames, five reading holds")
+    log(f"Forced keyframes at edited source jumps and reading starts: {cut_frames}")
+    started = time.monotonic()
+    count = 0
+    with ExitStack() as resources, tempfile.TemporaryFile() as errors:
+        anchors = []
+        if anchor_sources is not None:
+            with closing(source_anchors(anchor_sources, threads)) as photographs:
+                for photograph, index in photographs:
+                    if index != len(anchors):
+                        raise RuntimeError("Protected photographs arrived in the wrong order")
+                    anchor = (compose_anchor(photograph, rendition, index, framing == "portrait", WIDE_POSTER_OVERSCAN)
+                              if poster_framed else photograph.copy())
+                    anchors.append(resources.enter_context(anchor))
+            if len(anchors) != len(STOPS):
+                raise RuntimeError("Incomplete protected photographs")
+            log("Reading holds and posters use the original source photographs")
+            if poster_framed:
+                log("All wide overrides use poster keyframes: stationary hold-24 photographs, "
+                    "2% shared overscan, and constant whole-image motion alignment")
+        encoder = subprocess.Popen(command, stdin=subprocess.PIPE, stderr=errors)
+        try:
+            with closing(source_frames(sources, threads, plan)) as frames:
+                for frame, planned in frames:
+                    if count >= len(plan):
+                        raise RuntimeError("More decoded output frames than the camera plan")
+                    expected = plan[count]
+                    if planned != expected:
+                        raise RuntimeError(f"Decoded camera edit diverges at frame {count}")
+                    picture = anchors[planned.anchor] if anchors and planned.hold is not None else frame
+                    # All-wide replacements were generated from hold-24 posters.
+                    # These anchors are already composed once above. Copy them
+                    # without a second crop. A single constant uniform transform
+                    # aligns each native move; there is no time-varying correction.
+                    if poster_framed:
+                        view = (picture.copy() if planned.hold is not None else
+                                compose_aligned_wide_motion(frame, rendition, planned.take))
+                    else:
+                        view = compose_frame(picture, rendition, planned.anchor, planned.hold, framing == "portrait")
+                    with view:
+                        if planned.hold == FPS:
+                            save_posters(view, framing, STOPS[planned.anchor], stage, renditions)
+                        encoder.stdin.write(view.tobytes())
+                    count += 1
+                    if count % 48 == 0 or count == TOTAL_FRAMES:
+                        elapsed = time.monotonic() - started
+                        log(f"{target.name}: {count}/{TOTAL_FRAMES} frames ({elapsed:.0f}s)")
+            encoder.stdin.close()
+            if encoder.wait():
+                raise RuntimeError(f"Encoder failed: {error_tail(errors)}")
+            if count != TOTAL_FRAMES:
+                raise RuntimeError(f"Incomplete camera film: {count}/{TOTAL_FRAMES} frames")
+        except BrokenPipeError:
+            raise RuntimeError(f"Encoder pipe closed: {error_tail(errors)}") from None
+        finally:
+            with suppress(BrokenPipeError):
+                encoder.stdin.close()
+            stop_process(encoder)
+
+
+def render_master(sources, framing, stage, threads, preset, plan, renditions=None):
     validate_frame_plan(plan)
-    rendition = RENDITIONS[framing][0]
+    renditions = renditions or RENDITIONS[framing]
+    rendition = renditions[0]
     target = stage / video_name(framing, rendition)
     command = [
         "ffmpeg", "-hide_banner", "-v", "error", "-y", "-f", "rawvideo",
@@ -389,7 +721,7 @@ def render_master(sources, framing, stage, threads, preset, plan):
                 anchor = resources.enter_context(compose_anchor(
                     photograph, rendition, index, framing == "portrait"))
                 anchors.append(anchor)
-                save_posters(anchor, framing, STOPS[index], stage)
+                save_posters(anchor, framing, STOPS[index], stage, renditions)
                 log(f"Prepared fixed photograph: {STOPS[index]}")
         if len(anchors) != len(STOPS):
             raise RuntimeError("Incomplete set of fixed photographs")
@@ -415,14 +747,14 @@ def render_master(sources, framing, stage, threads, preset, plan):
             stop_process(encoder)
 
 
-def derive_video(master, framing, rendition, stage, threads, preset):
+def derive_video(master, framing, rendition, stage, threads, preset, cut_frames=CUT_FRAMES):
     target = stage / video_name(framing, rendition)
     command = [
         "ffmpeg", "-hide_banner", "-v", "error", "-nostdin", "-y", "-xerror",
         "-threads", str(threads), "-i", str(master), "-map", "0:v:0",
         "-filter_threads", str(threads), "-vf",
         f"scale={rendition.width}:{rendition.height}:flags=lanczos:out_color_matrix=bt709:out_range=tv,setsar=1",
-        "-fps_mode", "passthrough", *encoder_options(rendition, threads, preset),
+        "-fps_mode", "passthrough", *encoder_options(rendition, threads, preset, cut_frames),
         "-progress", "pipe:1", "-stats_period", "1", str(target),
     ]
     log(f"Deriving {target.name}")
@@ -492,24 +824,45 @@ def validate_video(path, rendition):
     }
 
 
-def export(framing, source_dir, output_dir, threads, preset, validate_only=False):
-    plan = build_frame_plan()
+def export(framing, source_dir, output_dir, threads, preset, validate_only=False,
+           motion="camera", source_overrides=None, cuts_config=None, preview=False):
+    if motion not in ("camera", "fixed"):
+        raise ValueError(f"Unknown motion mode: {motion}")
+    exclusions = load_exclusions(cuts_config)[framing]
+    plan = build_camera_plan(exclusions) if motion == "camera" else build_frame_plan()
+    cut_frames = camera_keyframes(plan) if motion == "camera" else CUT_FRAMES
     for command in ("ffmpeg", "ffprobe"):
         if shutil.which(command) is None:
             raise ValueError(f"Required executable is missing: {command}")
-    sources = validate_sources(source_dir / framing)
+    anchor_sources = validate_sources(source_dir / framing)
+    sources = validate_sources(source_dir / framing, source_overrides) if source_overrides else anchor_sources
+    if not preview:
+        minimum_width, minimum_height = (3840, 2160) if framing == "wide" else (1080, 1920)
+        for path, width, height in [*anchor_sources, *sources]:
+            if width < minimum_width or height < minimum_height:
+                raise ValueError(f"Full-quality {framing} requires at least {minimum_width} x {minimum_height} "
+                                 f"sources; {path} is {width} x {height}. Use --preview only for draft review.")
     if validate_only:
-        log(f"Validated four {framing} sources and the fixed-photograph frame plan; no media rendered.")
+        log(f"Validated four {framing} sources and the {motion} frame plan; no media rendered.")
         return
     output_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=f".quality-{framing}-", dir=output_dir) as temporary:
         stage = Path(temporary)
-        renditions = RENDITIONS[framing]
-        render_master(sources, framing, stage, threads, preset, plan)
+        if preview:
+            width, height = (960, 540) if framing == "wide" else (360, 780)
+            renditions = (Rendition("-preview", width, height, "4.1", 2500),)
+        else:
+            renditions = RENDITIONS[framing]
+        if motion == "camera":
+            poster_framed = framing == "wide" and set(source_overrides or {}) == set(range(4))
+            render_camera_master(sources, framing, stage, threads, preset, plan,
+                                 anchor_sources if source_overrides else None, renditions, poster_framed)
+        else:
+            render_master(anchor_sources, framing, stage, threads, preset, plan, renditions)
         master = stage / video_name(framing, renditions[0])
         results = [validate_video(master, renditions[0])]
         for rendition in renditions[1:]:
-            derive_video(master, framing, rendition, stage, threads, preset)
+            derive_video(master, framing, rendition, stage, threads, preset, cut_frames)
             results.append(validate_video(stage / video_name(framing, rendition), rendition))
         for rendition in renditions:
             for shot in STOPS:
@@ -531,25 +884,60 @@ def main():
     parser.add_argument("framing", choices=RENDITIONS)
     parser.add_argument("--source-dir", type=Path,
                         help="Root containing wide/ and/or portrait/ enhanced camera takes")
-    parser.add_argument("--output-dir", type=Path, default=ROOT / "assets" / "pass-the-salsa")
+    parser.add_argument("--source-override", action="append", default=[], metavar="TAKE=PATH",
+                        help="Replace one reviewed take, e.g. 03=/path/to/repaired.mp4; repeat as needed")
+    parser.add_argument("--motion-override-dir", type=Path,
+                        help="Optional root containing only accepted moving takes at wide/NN.mp4 or portrait/NN.mp4")
+    parser.add_argument("--cuts-config", type=Path,
+                        help="JSON overrides for reviewed inclusive skips; [] clears a repaired take's skips")
+    parser.add_argument("--motion", choices=("camera", "fixed"), default="camera",
+                        help="Full camera travel (default), or the archived fixed-photo treatment")
+    parser.add_argument("--output-dir", type=Path,
+                        help="Destination (default: assets/pass-the-salsa; required for previews)")
+    parser.add_argument("--preview", action="store_true",
+                        help="Render only a 960x540 wide or 360x780 phone review movie; allows draft-size motion overrides")
     parser.add_argument("--threads", type=int, default=2,
                         help="Threads per FFmpeg process (default: 2)")
     parser.add_argument("--preset", choices=("fast", "medium"), default="fast")
     parser.add_argument("--validate-only", action="store_true",
                         help="Check source metadata without rendering or changing output files")
     parser.add_argument("--plan-only", action="store_true",
-                        help="Validate and print the fixed-photograph frame plan without reading media")
+                        help="Validate and print the selected motion plan without reading media")
     args = parser.parse_args()
     if args.threads < 1:
         parser.error("--threads must be at least 1")
     if not args.plan_only and args.source_dir is None:
         parser.error("--source-dir is required unless --plan-only is used")
+    if args.preview and args.output_dir is None and not args.plan_only:
+        parser.error("--preview requires an explicit --output-dir outside production media")
+    overrides = {}
+    if args.motion_override_dir is not None and not args.plan_only:
+        if not args.motion_override_dir.is_dir():
+            parser.error("--motion-override-dir must be an existing directory")
+        overrides.update({index: path.resolve() for index in range(4)
+                          if (path := args.motion_override_dir / args.framing / f"{index:02d}.mp4").is_file()})
+    explicit_overrides = set()
+    for value in args.source_override:
+        take, separator, path = value.partition("=")
+        index = integer(take)
+        if not separator or not path or index not in range(4):
+            parser.error("--source-override must be TAKE=PATH, with TAKE from 00 through 03")
+        if index in explicit_overrides:
+            parser.error(f"Source {index:02d} was overridden more than once")
+        explicit_overrides.add(index)
+        overrides[index] = Path(path).resolve()
     try:
         if args.plan_only:
-            log(json.dumps(describe_plan(build_frame_plan()), indent=2))
+            description = (describe_camera_plan(build_camera_plan(load_exclusions(args.cuts_config)[args.framing])) if args.motion == "camera"
+                           else describe_plan(build_frame_plan()))
+            log(json.dumps(description, indent=2))
             return 0
-        export(args.framing, args.source_dir.resolve(), args.output_dir.resolve(),
-               args.threads, args.preset, args.validate_only)
+        output_dir = (args.output_dir or ROOT / "assets" / "pass-the-salsa").resolve()
+        if args.preview and output_dir == (ROOT / "assets" / "pass-the-salsa").resolve():
+            parser.error("Preview output must be outside production media")
+        export(args.framing, args.source_dir.resolve(), output_dir,
+               args.threads, args.preset, args.validate_only, args.motion, overrides,
+               args.cuts_config, args.preview)
     except (ValueError, RuntimeError, OSError, subprocess.SubprocessError) as error:
         print(f"Error: {error}", file=sys.stderr, flush=True)
         return 1
