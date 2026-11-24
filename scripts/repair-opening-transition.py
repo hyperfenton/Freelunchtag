@@ -190,7 +190,12 @@ class Repair:
         # Preserve the photographed orange plane, stripe and tag shadow wherever
         # the clean reference exposes them. Reconstruction is only needed under
         # its tag/lime footprints; rectangular clone boundaries stay covered.
-        occluders=Image.fromarray(np.maximum(np.asarray(self.tag_mask),np.asarray(self.arrival_lime_mask)))
+        # The color-derived arrival matte is intentionally tight for rim repair.
+        # Base restoration needs the whole photographed lime, including its
+        # darker right peel/stem, excluded with a small photographic margin.
+        reference_lime=shape_mask(self.size,[("ellipse",(425,395,557,524))],s,0)
+        reference_lime=Image.fromarray(np.maximum(np.asarray(reference_lime),np.asarray(self.arrival_lime_mask)))
+        occluders=Image.fromarray(np.maximum(np.asarray(self.tag_mask),np.asarray(reference_lime)))
         occluders=occluders.filter(ImageFilter.MaxFilter(2*round(2*s)+1)).filter(ImageFilter.GaussianBlur(.7*s))
         self.clean_base_mask=Image.fromarray(np.minimum(np.asarray(self.base_mask),255-np.asarray(occluders)))
         # Wheel backing plate is separate from both wooden surfaces.

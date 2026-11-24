@@ -5,7 +5,7 @@
   "aspect_ratio": "auto",
   "enhancement": "default",
   "frame_interpolation": null,
-  "notes": "The eight enhanced original takes are retained as photograph sources and portrait motion. Three reviewed replacement desktop camera takes remain. The first desktop move reuses the original enhanced take with a reproducible local repair. Native 4K boundary corrections have passed visual review; the final compressed delivery is the remaining publication gate. No optical-flow interpolation or source motion retiming is used.",
+  "notes": "The eight enhanced original takes are retained as photograph sources and portrait motion. Three reviewed replacement desktop camera takes remain. The first desktop move reuses the original enhanced take with a reproducible local repair. Native 4K visual review and the reference-lime mask coverage check have passed; final compressed delivery verification remains pending. No optical-flow interpolation or source motion retiming is used.",
   "sources": [
     {
       "path": "wide/00.mp4",
@@ -190,7 +190,7 @@
     "source_review": {
       "date": "2026-11-24",
       "previous_release_desktop_4k_frames_reviewed": 436,
-      "opening_repair_status": "Continuous original lime motion accepted in compressed 4K; subsequent localized sign-base and tag-edge cleanup accepted in native 4K before final encoding.",
+      "opening_repair_status": "Native 4K repair accepted, including the reference-lime right-rim guard; final corrected delivery pending.",
       "review_scope": [
         "single lime identity and continuous jump",
         "table contact and shadow",
@@ -199,7 +199,7 @@
         "entry and exit framing",
         "compressed4K delivery"
       ],
-      "result": "Motion, contact, rim, wood and joins passed compressed 4K review. Final native 4K cleanup passed for source frames 112, 120 and 131, including the join to native frame 132. Final compressed cleanup verification remains pending."
+      "result": "Continuous hop, landing, tag edges, photographic sign shadow and joins passed review. A narrow reference-lime right rim found in the prior compressed delivery is now excluded; the corrected mask passes all 32 affected frames. The corrected compressed delivery is the final publication gate."
     }
   },
   "motion_overrides": [
@@ -332,11 +332,12 @@
       "same_frame_clean_donors": true,
       "new_generation_jobs": false,
       "native_boundary_review": {
-        "version": "v8",
+        "version": "v9",
         "width": 3840,
         "height": 2160,
         "source_frames": [
           112,
+          113,
           120,
           131,
           132
@@ -347,9 +348,23 @@
           "preserved photographed sign base and cast shadow",
           "removed the old tag lower-edge fringe",
           "kept the tabletop behind the sign and tag",
-          "removed the pale bevel overwrite"
+          "removed the pale bevel overwrite",
+          "excluded the full reference-lime right rim from the photographed sign base"
         ],
-        "script_sha256": "1f7b4bb987ae683bb4ac1709f15a7fe2b2f99cc9cbf870233d7ef565fe793742"
+        "script_sha256": "4d86f0ff0f490f7d71a999168e1adc9d5a59adf61ecb56b081fd1077c3e72e46"
+      },
+      "reference_lime_mask_review": {
+        "result": "accepted",
+        "date": "2026-11-24",
+        "source_frames": [
+          100,
+          131
+        ],
+        "visible_frames_checked": 26,
+        "frames_outside_view": 6,
+        "retained_green_pixels_after_warp": 0,
+        "native_4k_frame_113": "accepted",
+        "actor_and_arrival_masks_unchanged": true
       }
     }
   ]
