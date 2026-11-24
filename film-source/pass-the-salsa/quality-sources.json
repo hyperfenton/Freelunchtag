@@ -119,5 +119,40 @@
       "duration": "6.041667",
       "nb_frames": "145"
     }
-  ]
+  ],
+  "homepage_motion": {
+    "mode": "fixed_photographs_with_uniform_zoom_and_clean_cuts",
+    "anchor_frames": [
+      {
+        "take": "00.mp4",
+        "frame": 0
+      },
+      {
+        "take": "01.mp4",
+        "frame": 0
+      },
+      {
+        "take": "02.mp4",
+        "frame": 0
+      },
+      {
+        "take": "03.mp4",
+        "frame": 0
+      },
+      {
+        "take": "03.mp4",
+        "frame": 144
+      }
+    ],
+    "cut_frames": [
+      136,
+      353,
+      548,
+      730
+    ],
+    "maximum_additional_zoom": 1.015,
+    "generated_transition_frames_used": false,
+    "frame_blending": false,
+    "optical_flow": false
+  }
 }
