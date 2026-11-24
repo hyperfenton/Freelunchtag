@@ -3,7 +3,9 @@
 import {mapValue} from './scroll-route.mjs?v=walkthrough-1';
 export {mapValue};
 export const fps=24;
-export const lastFrame=(4*144 + 5*58 - 1)/fps;
+const holdFrames=58;
+export const openingMotionStart=holdFrames/fps;
+export const lastFrame=(4*144 + 5*holdFrames - 1)/fps;
 const readings=[0, 202/24, 404/24, 606/24, 808/24];
 const shots=['offer','lookup','text','swap','close'];
 export const posterTimes=Object.fromEntries(shots.map((name,i)=>[name,readings[i]+1]));
@@ -14,6 +16,7 @@ export const chapters=[
   ['why',19.8,21.6,'text',72],['claim',22.8,24,'swap',70],
   ['bonus',24.85,26.25,'swap',161],['made-with-love',30.4,34.7,'close',180]
 ].map(([id,start,read,still,span])=>({id,start,read,still,span}));
+const invitationChapters=chapters.map((chapter,index)=>index===0?{...chapter,span:50}:chapter);
 export function sceneAt(t){let i=0;while(i+1<chapters.length && t>=chapters[i+1].start)i++;return i;}
 export function makeRoute(tops,end){
   const route=[];
@@ -29,6 +32,21 @@ export function makeRoute(tops,end){
   }
   route.push([end,lastFrame]);
   return route;
+}
+function makeInvitationRoute(tops,end){
+  const route=makeRoute(tops,end),start=tops[0];
+  const travel=Math.min(100,(tops[1]-start)*.25),hold=Math.min(1,travel*.05);
+  // Keep the native opening hold invertible for playback, but fit it into one
+  // scroll pixel. The first gesture then reaches visible camera travel.
+  return [
+    ...route.filter(([,time])=>time<openingMotionStart)
+      .map(([,time])=>[start+hold*time/openingMotionStart,time]),
+    [start+hold,openingMotionStart],
+    [start+travel*.1,(holdFrames+4)/fps],
+    [start+travel*.5,(holdFrames+10)/fps],
+    [start+travel,(holdFrames+16)/fps],
+    ...route.filter(([,time])=>time>=chapters[1].start),
+  ];
 }
 export const nextStops=shots.map(name=>posterTimes[name]);
 // Percentages refer to the two native masters, portrait first then landscape.
@@ -83,8 +101,10 @@ export function configure(cut){
         frames:[[readings[4]-.16,...bounds],[lastFrame,...bounds]]});
     }
   }
-  return {chapters,sceneAt,makeRoute,mapValue,fps,lastFrame,posterTimes,nextStops,
-    album:'assets/'+cut+'/', revision:invitation?'?v=quality-3':'?v=1',
+  return {chapters:invitation?invitationChapters:chapters,sceneAt,
+    makeRoute:invitation?makeInvitationRoute:makeRoute,mapValue,fps,lastFrame,posterTimes,nextStops,
+    openingMotionStart:invitation?openingMotionStart:undefined,
+    album:'assets/'+cut+'/', revision:invitation?'?v=quality-4':'?v=1',
     responsiveMedia:invitation,
     cue:invitation?'See how lunch works':found?'Scroll with the tag':'Scroll down the counter',
     replay:invitation?'Back to your tag':found?'Find it again':'Back to the pizza box',

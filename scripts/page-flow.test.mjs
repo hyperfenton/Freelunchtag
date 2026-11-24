@@ -115,6 +115,7 @@ test('each film edition retains its guest entry, five readable stops and reversi
     const path=cut==='pass-the-salsa'?'your-tag':cut;
     const entry=await load(path+'.html');
     const config=configure(cut);
+    const editionRoute=config.makeRoute(tops,end);
     assert.ok(entry.includes('data-film="'+cut+'"'));
     const canonical=cut==='pass-the-salsa'?'https://freelunchtag.com/':'https://freelunchtag.com/'+path+'.html';
     assert.ok(entry.includes('<link rel="canonical" href="'+canonical+'">'));
@@ -128,13 +129,53 @@ test('each film edition retains its guest entry, five readable stops and reversi
     for(const [i,track] of config.tracks.entries()){
       const {frames}=track,t=config.nextStops[track.deck ? 4 : i];
       assert.ok(frames[0][0]<=t && frames.at(-1)[0]>=t,'the object is present at its reading stop');
-      assert.ok(Math.abs(t-mapValue(route,mapValue(route,t,true)))<1e-7);
+      assert.ok(Math.abs(t-mapValue(editionRoute,mapValue(editionRoute,t,true)))<1e-7);
     }
     for(const name of Object.keys(config.posterTimes)){
       for(const aspect of ['', '-wide']){
         const file=new URL('../assets/'+cut+'/film-'+name+aspect+'.webp',import.meta.url);
         assert.ok((await stat(file)).size>5000);
       }
+    }
+  }
+});
+
+test('the homepage reaches camera motion on the first gesture and keeps playback and later stops reversible',async()=>{
+  const {configure,chapters,makeRoute,mapValue,fps,openingMotionStart}=await import('../alternate-films.mjs');
+  const primary=configure('pass-the-salsa');
+  assert.equal(primary.chapters[0].span,50,'the opening uses a shorter scroll spacer');
+  assert.deepEqual(primary.chapters.slice(1),chapters.slice(1),'later chapters keep their pacing');
+  for(const viewportHeight of [568,844,900,1440]){
+    const heights=primary.chapters.map(ch=>Math.max(480,ch.span*viewportHeight/100));
+    const tops=heights.map((_,i)=>heights.slice(0,i).reduce((sum,height)=>sum+height,0));
+    const end=heights.reduce((sum,height)=>sum+height,0)-viewportHeight;
+    const route=primary.makeRoute(tops,end),original=makeRoute(tops,end);
+    assert.deepEqual(route[0],[0,0]);
+    assert.deepEqual(route.at(-1),[end,primary.lastFrame]);
+    for(let i=1;i<route.length;i++){
+      assert.ok(route[i][0]>route[i-1][0]&&route[i][1]>route[i-1][1],'both directions remain strictly monotone');
+    }
+    assert.equal(mapValue(route,-1),0,'overscroll returns the opening poster');
+    assert.equal(mapValue(route,0),0,'the exact top remains film time zero');
+    assert.equal(mapValue(route,1),openingMotionStart,'one pixel skips the frozen introduction');
+    for(const [distance,minimumMovingFrames] of [[10,4],[50,10],[100,16]]){
+      const time=mapValue(route,distance);
+      assert.ok(Math.round((time-openingMotionStart)*fps)>=minimumMovingFrames,
+        `${distance}px advances visibly into the moving take at viewport height ${viewportHeight}`);
+      assert.ok(time<chapters[1].start,'the first gesture stays within the opening camera move');
+    }
+    const later=original.filter(([,time])=>time>=chapters[1].start);
+    assert.deepEqual(route.filter(([,time])=>time>=chapters[1].start),later,'all later route anchors stay in place');
+    for(const y of [.125,.25,.5,.75,1,10,50,100,...Array.from({length:41},(_,i)=>end*i/40)]){
+      assert.ok(Math.abs(mapValue(route,mapValue(route,y),true)-y)<1e-7,'scroll reverses through '+y);
+    }
+    for(const time of [0,1/fps,1,57/fps,openingMotionStart,...primary.chapters.map(ch=>ch.read),primary.lastFrame]){
+      assert.ok(Math.abs(mapValue(route,mapValue(route,time,true))-time)<1e-7,'native playback time remains representable: '+time);
+    }
+    for(const cut of ['found-tag','lunch-line']){
+      const saved=configure(cut);
+      assert.equal(saved.chapters[0].span,140,'saved design keeps its original opening');
+      assert.deepEqual(saved.makeRoute(tops,end),original,'saved design keeps its original route');
     }
   }
 });

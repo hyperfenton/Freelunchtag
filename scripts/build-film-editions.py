@@ -22,7 +22,7 @@ EDITIONS = {
     },
     'pass-the-salsa': {
         'name': 'Someone gave you a tag', 'path': 'your-tag', 'color': '#fff4d8',
-        'page_title': 'Free Lunch Tag | Meadows Baptist Church in Plano', 'cue': 'See how lunch works', 'revision': 'quality-3',
+        'page_title': 'Free Lunch Tag | Meadows Baptist Church in Plano', 'cue': 'See how lunch works', 'revision': 'quality-4',
         'title': 'Someone gave you a <em>Free Lunch Tag.</em>',
         'description': 'Your lunch invitation from Meadows Baptist Church in Plano, Texas. Scan your Free Lunch Tag or enter its code to find your host and make a plan.',
         'alt': 'A Classic Lightning keychain clips to a bag at the taco window. The bag reads “Someone gave you a Free Lunch Tag. Your Meadows host buys lunch.”'
@@ -49,7 +49,7 @@ def build():
         html=html.replace('https://freelunchtag.com/"','https://freelunchtag.com/'+path+'.html"')
         html=html.replace('assets/film/film-lift','assets/'+cut+'/film-offer').replace('.webp?v=walkthrough-1',f'.webp?v={revision}')
         html=html.replace('#120d25',settings['color'])
-        html=html.replace('<link rel="preload" as="font"', '<link rel="stylesheet" href="film-editions.css?v=quality-3">\n<link rel="preload" as="font"')
+        html=html.replace('<link rel="preload" as="font"', '<link rel="stylesheet" href="film-editions.css?v=quality-4">\n<link rel="preload" as="font"')
         html=html.replace('How lunch works</button>','Lunch guide</button>')
         html=html.replace('<button type="button" id="readScene"', '<button type="button" id="tableTalk" aria-haspopup="dialog">Draw a table question</button>\n      <button type="button" id="readScene"')
         html=html.replace('Scroll to follow the glass', settings['cue'])
