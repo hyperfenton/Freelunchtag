@@ -1,8 +1,9 @@
 import * as originalRoute from './scroll-route.mjs?v=walkthrough-1';
 import {mountFilmObjects, posterTimes as originalPosters} from './film-objects.mjs?v=editions-1';
+import {selectFilmQuality, filmFilename, filmPosterSources} from './film-quality.mjs?v=quality-2';
 
 const editionName=document.documentElement.dataset.film;
-const edition=editionName ? (await import('./alternate-films.mjs?v=3')).configure(editionName) : null;
+const edition=editionName ? (await import('./alternate-films.mjs?v=quality-2')).configure(editionName) : null;
 const {chapters, fps, lastFrame, makeRoute, mapValue, sceneAt}=edition || originalRoute;
 const posterTimes=edition?.posterTimes || originalPosters;
 const byId=id=>document.getElementById(id);
@@ -14,12 +15,86 @@ const details=byId('sceneDialog'), content=byId('sceneContent'), title=byId('sce
 const quick=byId('quickTag'), watch=byId('watchFilm'), cue=byId('scrollCue');
 const wide=matchMedia('(min-aspect-ratio:1/1)'), reduce=matchMedia('(prefers-reduced-motion:reduce)');
 const album=edition?.album || 'assets/film/', revision=edition?.revision || '?v=walkthrough-1';
+const responsiveMedia=edition?.responsiveMedia===true;
+const qualityControl=byId('filmQuality'), qualityStatus=byId('filmQualityStatus');
 const dialogsOpen=()=>Boolean(document.querySelector('dialog[open]'));
 const motionOff=()=>reduce.matches||root.dataset.motion==='off'||navigator.connection?.saveData===true;
 const frameTime=t=>Math.max(0,Math.min(lastFrame,Math.round(t*fps)/fps));
 let route=[], selected=-1, wanted=0, sourceName='', ready=false, unavailable=false;
 let playbackEnd=null;
 let watching=false, wasOpen=false, tick=0, previousFrame=0, ownScroll=-1, relocated=null;
+let qualityPreference='auto', activeQuality='', sourceWide=false, selectionVersion=0;
+let pendingQualityKey='', selectedQualityKey='', qualityWatchdog=0, seekStarted=0, slowSeeks=0;
+const qualitySelections=new Map(), failedQualities={wide:new Set(),portrait:new Set()};
+
+// Only the already-requested, same-origin opening poster supplies speed evidence.
+// A cached image, a different chapter or missing Resource Timing stays unknown.
+const openingTransfer=responsiveMedia ? new Promise(resolve=>{
+  const finish=()=>{
+    photo.removeEventListener('load',finish);photo.removeEventListener('error',finish);
+    try{
+      const url=new URL(photo.currentSrc||photo.src,location.href);
+      if(url.origin!==location.origin||!url.pathname.includes('/film-offer'))return resolve(null);
+      const entry=performance.getEntriesByName(url.href).at(-1);
+      resolve(entry ? {transferSize:entry.transferSize,responseStart:entry.responseStart,responseEnd:entry.responseEnd} : null);
+    }catch{resolve(null);}
+  };
+  if(photo.complete)finish();
+  else{photo.addEventListener('load',finish,{once:true});photo.addEventListener('error',finish,{once:true});}
+}) : null;
+// Let the high-priority photograph finish and reach the screen before a large
+// movie competes for bandwidth. Reuse this gate for later quality changes.
+const openingPaint=responsiveMedia ? openingTransfer.then(async()=>{
+  try{await photo.decode();}catch{}
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+}) : Promise.resolve();
+
+const currentPreference=()=>!wide.matches&&qualityPreference==='4k'?'auto':qualityPreference;
+function qualityMessage(){
+  if(!qualityControl)return;
+  qualityControl.value=currentPreference();
+  qualityControl.querySelector('[value="4k"]').disabled=!wide.matches;
+  qualityControl.disabled=motionOff();
+  if(motionOff())qualityStatus.textContent='Motion is paused.';
+  else if(unavailable)qualityStatus.textContent='Showing still images.';
+  else if(pendingQualityKey)qualityStatus.textContent='Choosing quality…';
+  else if(activeQuality){
+    const label=activeQuality==='4k'?'4K':activeQuality==='hd'?'HD':'720p';
+    qualityStatus.textContent=!ready?'Loading '+label+'…':currentPreference()==='4k'&&activeQuality!=='4k'?'Using '+label+' for smoother playback.':currentPreference()==='auto'?'Auto: '+label:label;
+  }
+}
+function availableQuality(quality,isWide){
+  const failures=failedQualities[isWide?'wide':'portrait'];
+  while(failures.has(quality)){
+    if(quality==='720')return null;
+    quality=quality==='4k'?'hd':'720';
+  }
+  return quality;
+}
+function attachMovie(name,quality='',isWide=wide.matches){
+  if(name===sourceName&&!unavailable){qualityMessage();return;}
+  clearTimeout(qualityWatchdog);
+  stopWatching();posterAt(wanted);sourceName=name;ready=false;unavailable=false;
+  activeQuality=quality;sourceWide=isWide;seekStarted=0;slowSeeks=0;
+  film.preload='auto';film.src=name;film.load();qualityMessage();
+  armQualityWatchdog();
+}
+function armQualityWatchdog(){
+  clearTimeout(qualityWatchdog);
+  if(activeQuality!=='4k'||motionOff()||dialogsOpen()||document.hidden||ready&&film.readyState>=2)return;
+  const expected=sourceName;
+  qualityWatchdog=setTimeout(()=>{
+    if(sourceName===expected&&!motionOff()&&!dialogsOpen()&&!document.hidden&&!(ready&&film.readyState>=2))lowerQuality();
+  },5000);
+}
+function lowerQuality(){
+  if(!responsiveMedia||!activeQuality||sourceWide!==wide.matches)return false;
+  failedQualities[sourceWide?'wide':'portrait'].add(activeQuality);
+  const next=availableQuality(activeQuality,sourceWide);
+  if(!next)return false;
+  attachMovie(album+filmFilename(sourceWide,next)+revision,next,sourceWide);
+  return true;
+}
 function measure(){
   objects.measure(wide.matches,getComputedStyle(film).objectFit);
   const last=Math.max(1,root.scrollHeight-innerHeight);
@@ -32,7 +107,11 @@ function showPoster(i,t){
   const name=stillAt(i,t);
   if(still.dataset.shot===name)return;
   still.dataset.shot=name;
-  widePhoto.srcset=album+'film-'+name+'-wide.webp'+revision;
+  if(responsiveMedia){
+    const sources=filmPosterSources(album,name,revision);
+    widePhoto.srcset=sources.wide;widePhoto.sizes='100vw';
+    photo.srcset=sources.portrait;photo.sizes='100vw';
+  }else widePhoto.srcset=album+'film-'+name+'-wide.webp'+revision;
   photo.src=album+'film-'+name+'.webp'+revision;
 }
 function setScene(t){
@@ -54,17 +133,46 @@ function setScene(t){
 }
 function chooseFile(){
   if(motionOff()||dialogsOpen())return;
-  const name=album+(wide.matches?'free-lunch-wide.mp4':'free-lunch-portrait.mp4')+revision;
-  if(name===sourceName)return;
-  posterAt(wanted);sourceName=name;ready=false;unavailable=false;
-  film.preload='auto';film.src=name;film.load();
+  const isWide=wide.matches;
+  if(!responsiveMedia){attachMovie(album+(isWide?'free-lunch-wide.mp4':'free-lunch-portrait.mp4')+revision);return;}
+  if(activeQuality&&sourceWide!==isWide)posterAt(wanted);
+  const preference=currentPreference(),key=(isWide?'wide':'portrait')+':'+preference;
+  if(selectedQualityKey===key&&sourceName){
+    if(pendingQualityKey&&pendingQualityKey!==key){++selectionVersion;pendingQualityKey='';qualityMessage();}
+    return;
+  }
+  if(pendingQualityKey===key)return;
+  pendingQualityKey=key;
+  const version=++selectionVersion;
+  if(!qualitySelections.has(key)){
+    qualitySelections.set(key,selectFilmQuality({
+      wide:isWide,width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio||1,
+      fit:getComputedStyle(film).objectFit,preference,connection:navigator.connection,
+      decodingInfo:navigator.mediaCapabilities?.decodingInfo?.bind(navigator.mediaCapabilities),
+      posterTransfer:openingTransfer
+    }));
+  }
+  qualityMessage();
+  qualitySelections.get(key).then(async selection=>{
+    await openingPaint;
+    if(version!==selectionVersion)return;
+    pendingQualityKey='';
+    if(isWide!==wide.matches||preference!==currentPreference()||motionOff()||dialogsOpen()){qualityMessage();return;}
+    selectedQualityKey=key;
+    const quality=availableQuality(selection,isWide);
+    if(!quality){unavailable=true;posterAt(wanted);qualityMessage();return;}
+    attachMovie(album+filmFilename(isWide,quality)+revision,quality,isWide);
+  });
 }
 function posterAt(t){
   cinema.classList.remove('on-film');setScene(t);showPoster(sceneAt(t),t);
 }
 function reveal(){
+  if(responsiveMedia&&sourceWide!==wide.matches)return;
+  if(responsiveMedia&&!watching&&wanted===0){posterAt(0);return;}
   if((watching||Math.abs(film.currentTime-wanted)<.5/fps||cinema.classList.contains('on-film'))&&ready&&!motionOff()&&!unavailable&&film.readyState>=2){
     cinema.classList.add('on-film');objects.show(film.currentTime);
+    clearTimeout(qualityWatchdog);
   }
 }
 function schedule(){
@@ -81,11 +189,11 @@ function render(now){
     if(playbackEnd!==null && film.currentTime>=playbackEnd){
       const end=playbackEnd;stopWatching();jumpToFrame(end);return;
     }
-    wanted=frameTime(film.currentTime);setScene(wanted);
+    wanted=frameTime(film.currentTime);setScene(wanted);reveal();
     ownPosition(mapValue(route,wanted,true));schedule();return;
   }
   if(motionOff()||unavailable){posterAt(wanted);return;}
-  if(!ready||film.seeking)return;
+  if(!ready||film.seeking||responsiveMedia&&sourceWide!==wide.matches)return;
   const delta=wanted-film.currentTime;
   if(Math.abs(delta)<.5/fps){setScene(wanted);reveal();return;}
   // A single outstanding decoder seek prevents stale frames piling up on iOS.
@@ -95,7 +203,7 @@ function render(now){
   let step=Math.max(1/fps,Math.abs(delta)*(1-Math.exp(-dt/46)));
   step=Math.min(step,Math.abs(delta));
   const dest=frameTime(film.currentTime+Math.sign(delta)*step);
-  try{film.currentTime=dest;}catch{schedule();}
+  try{seekStarted=performance.now();film.currentTime=dest;}catch{schedule();}
 }
 function followScroll(){
   if(dialogsOpen())return;
@@ -157,7 +265,7 @@ function watchFilm(){
   if(watching){stopWatching();followScroll();return;}
   if(motionOff())return;
   chooseFile();
-  if(!ready||unavailable)return;
+  if(!ready||unavailable||pendingQualityKey)return;
   watching=true;watch.textContent='Return to scrolling';
   if(wanted>=lastFrame-.1){film.currentTime=0;wanted=0;ownPosition(0);}
   film.play().then(schedule).catch(()=>{stopWatching();followScroll();});
@@ -183,25 +291,50 @@ for(const type of ['wheel','touchstart'])addEventListener(type,()=>{if(watching&
 addEventListener('keydown',e=>{
   if(watching&&!dialogsOpen()&&['PageDown','PageUp','ArrowDown','ArrowUp','Home','End'].includes(e.key))stopWatching();
 });
-film.addEventListener('loadedmetadata',()=>{ready=true;previousFrame=0;schedule();});
-film.addEventListener('loadeddata',()=>{schedule();reveal();});
+film.addEventListener('loadedmetadata',()=>{
+  ready=true;previousFrame=0;qualityMessage();
+  if(responsiveMedia&&Math.abs(film.currentTime-wanted)>=.5/fps){
+    try{seekStarted=performance.now();film.currentTime=wanted;}catch{}
+  }
+  schedule();
+});
+film.addEventListener('loadeddata',()=>{clearTimeout(qualityWatchdog);schedule();reveal();});
 film.addEventListener('seeked',()=>{
   // A seek from the previous orientation can complete after a poster takes over.
-  if(motionOff()||unavailable||!ready)return;
+  if(motionOff()||unavailable||!ready||responsiveMedia&&sourceWide!==wide.matches)return;
+  if(activeQuality==='4k'&&seekStarted){
+    slowSeeks=performance.now()-seekStarted>500?slowSeeks+1:0;
+    if(slowSeeks>=3&&lowerQuality())return;
+  }
+  seekStarted=0;
   setScene(film.currentTime);reveal();schedule();
 });
 film.addEventListener('ended',()=>{stopWatching();wanted=lastFrame;ownPosition(mapValue(route,wanted,true));setScene(wanted);});
-film.addEventListener('error',()=>{stopWatching();unavailable=true;ready=false;posterAt(wanted);});
+film.addEventListener('error',()=>{
+  if(lowerQuality())return;
+  clearTimeout(qualityWatchdog);stopWatching();unavailable=true;ready=false;posterAt(wanted);qualityMessage();
+});
 function updateMotion(){
   watch.disabled=motionOff();
-  if(motionOff()){stopWatching();film.pause();posterAt(wanted);return;}
-  chooseFile();schedule();
+  qualityMessage();
+  if(motionOff()){clearTimeout(qualityWatchdog);stopWatching();film.pause();posterAt(wanted);return;}
+  chooseFile();armQualityWatchdog();schedule();
 }
+qualityControl?.addEventListener('change',()=>{
+  stopWatching();qualityPreference=qualityControl.value;
+  ++selectionVersion;pendingQualityKey='';selectedQualityKey='';
+  // An explicit choice can reassess a resized viewport; normal resizing never
+  // starts a second rendition download merely to upgrade its quality.
+  qualitySelections.delete((wide.matches?'wide':'portrait')+':'+currentPreference());
+  failedQualities[wide.matches?'wide':'portrait'].clear();
+  chooseFile();
+});
 new MutationObserver(updateMotion).observe(root,{attributes:true,attributeFilter:['data-motion']});
 reduce.addEventListener('change',updateMotion);
 let previousWidth=innerWidth;
 function resize(){
   const t=wanted;measure();
+  qualityMessage();
   if(Math.abs(previousWidth-innerWidth)>8){
     previousWidth=innerWidth;ownPosition(mapValue(route,t,true));chooseFile();
   }
@@ -301,9 +434,9 @@ details.addEventListener('close',()=>{
 
 function watchDialogs(){
   const open=dialogsOpen();
-  if(open&&!wasOpen)film.pause();
+  if(open&&!wasOpen){clearTimeout(qualityWatchdog);film.pause();}
   if(!open&&wasOpen){
-    chooseFile();
+    chooseFile();armQualityWatchdog();
     if(watching)film.play().then(schedule).catch(stopWatching);
     else followScroll();
   }
@@ -311,9 +444,12 @@ function watchDialogs(){
 }
 for(const d of document.querySelectorAll('dialog'))new MutationObserver(watchDialogs).observe(d,{attributes:true,attributeFilter:['open']});
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden)film.pause();
-  else if(watching&&!dialogsOpen())film.play().then(schedule).catch(stopWatching);
-  else schedule();
+  if(document.hidden){clearTimeout(qualityWatchdog);film.pause();}
+  else{
+    armQualityWatchdog();
+    if(watching&&!dialogsOpen())film.play().then(schedule).catch(stopWatching);
+    else schedule();
+  }
 });
 document.querySelectorAll('a[href="#claim"]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();if(details.open)details.close();quick.click();}));
 function followHash(){
@@ -323,6 +459,9 @@ function followHash(){
 }
 for(const chapter of chapters)byId(chapter.id).style.setProperty('--travel',chapter.span+'svh');
 root.classList.add('projecting');
+// Clipped page content must not create invisible keyboard stops. Dialogs move
+// or copy its children outside these ancestors, restoring normal interaction.
+document.querySelectorAll('body>main,body>footer').forEach(node=>{node.inert=true;});
 measure();wanted=frameTime(mapValue(route,scrollY));setScene(wanted);showPoster(selected,wanted);
 addEventListener('hashchange',followHash);
 if(location.hash)followHash();

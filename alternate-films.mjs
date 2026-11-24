@@ -84,7 +84,8 @@ export function configure(cut){
     }
   }
   return {chapters,sceneAt,makeRoute,mapValue,fps,lastFrame,posterTimes,nextStops,
-    album:'assets/'+cut+'/', revision:invitation?'?v=2':'?v=1',
+    album:'assets/'+cut+'/', revision:invitation?'?v=quality-2':'?v=1',
+    responsiveMedia:invitation,
     cue:invitation?'See how lunch works':found?'Scroll with the tag':'Scroll down the counter',
     replay:invitation?'Back to your tag':found?'Find it again':'Back to the pizza box',
     tracks, questionDecks:invitation?salsaDecks:undefined};
